@@ -1,7 +1,7 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React from "react";
+import { Link } from "react-router-dom";
 
-const SignUp = () => {
+function SignUp() {
   return (
     <div className="h-full p-20">
       <div className="flex items-center justify-center">
@@ -18,8 +18,9 @@ const SignUp = () => {
             type="text"
             className="bg-body px-3 text-white w-full focus:outline-none"
             placeholder="아이디를 입력해주세요."
-          ></input>
+          />
           <button
+            type="button"
             className="bg-purple p-2 rounded-md text-white text-xs"
             style={{ width: 80, marginLeft: 10 }}
           >
@@ -34,14 +35,14 @@ const SignUp = () => {
             type="text"
             className="border-2 border-white w-full bg-body py-2 px-5 rounded-md text-white focus:outline-none"
             placeholder="비밀번호를 입력해주세요."
-          ></input>
+          />
         </div>
         <div className="flex items-center mt-2">
           <input
             type="text"
             className="border-2 border-white w-full bg-body py-2 px-5 rounded-md text-white focus:outline-none"
             placeholder="비밀번호를 다시 한번 입력해주세요."
-          ></input>
+          />
         </div>
         <div className="flex items-center mt-2">
           <p className="text-xs text-orange">
@@ -49,7 +50,10 @@ const SignUp = () => {
           </p>
         </div>
         <div className="flex items-center justify-center mt-10">
-          <button className="bg-black w-full p-2 rounded-lg text-white">
+          <button
+            type="button"
+            className="bg-black w-full p-2 rounded-lg text-white"
+          >
             회원가입
           </button>
         </div>
@@ -62,6 +66,6 @@ const SignUp = () => {
       </div>
     </div>
   );
-};
+}
 
 export default SignUp;

@@ -3,7 +3,7 @@ import { Route, Routes } from "react-router-dom";
 import SignUp from "./pages/SignUp";
 import Login from "./pages/Login";
 
-const App = () => {
+function App() {
   return (
     <div>
       <Routes>
@@ -12,6 +12,6 @@ const App = () => {
       </Routes>
     </div>
   );
-};
+}
 
 export default App;
