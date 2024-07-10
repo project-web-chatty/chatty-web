@@ -1,9 +1,15 @@
 import React from "react";
+import { Route, Routes } from "react-router-dom";
+import Home from "./components/Home";
+import Login from "./components/Login";
 
 const App = () => {
   return (
-    <div className="flex items-center justify-center h-full text-white">
-      <h1 className="text-3xl font-bold">Welcome to Chatty!</h1>
+    <div>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+      </Routes>
     </div>
   );
 };
