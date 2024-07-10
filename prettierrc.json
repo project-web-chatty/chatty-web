@@ -1,0 +1,11 @@
+{
+    "printWidth": 120,
+    "semi": true,
+    "trailingComma": "none",
+    "arrowParens": "avoid",
+    "htmlWhitespaceSensitivity": "css",
+    "jsxSingleQuote": true,
+    "plugins": [
+        "prettier-plugin-tailwindcss"
+    ]
+}
