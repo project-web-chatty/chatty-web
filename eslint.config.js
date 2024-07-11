@@ -61,7 +61,7 @@ export default [
           trailingComma: "all",
           arrowParens: "avoid",
           htmlWhitespaceSensitivity: "css",
-          jsxSingleQuote: true,
+          jsxSingleQuote: false,
         },
       ],
     },
