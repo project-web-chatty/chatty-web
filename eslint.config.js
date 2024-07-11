@@ -1,5 +1,10 @@
-module.exports = {
-    root: true,
+// eslint.config.js
+import eslintConfig from "eslint-config-airbnb";
+import prettierConfig from "./prettier.config.js";
+
+export default [
+  {
+    ignores: ["**/*.test.js", "**/*.test.ts", "**/*.test.tsx"], // Ignored files
     parser: "@typescript-eslint/parser",
     parserOptions: {
       project: "./tsconfig.json",
@@ -22,8 +27,15 @@ module.exports = {
       "plugin:jsx-a11y/strict",
       "plugin:@typescript-eslint/recommended",
       "plugin:prettier/recommended",
+      "prettier",
     ],
-    plugins: ["react", "react-hooks", "@typescript-eslint", "jsx-a11y"],
+    plugins: [
+      "react",
+      "react-hooks",
+      "@typescript-eslint",
+      "jsx-a11y",
+      "prettier",
+    ],
     settings: {
       react: {
         version: "detect",
@@ -39,5 +51,19 @@ module.exports = {
         },
       ],
       "no-useless-catch": "off",
-    }
-  };
+      quotes: ["error", "double"], // 쌍따옴표 사용
+      "@typescript-eslint/quotes": ["error", "double"], // TypeScript에서 쌍따옴표 사용
+      "prettier/prettier": [
+        "error",
+        {
+          printWidth: 120,
+          semi: true,
+          trailingComma: "all",
+          arrowParens: "avoid",
+          htmlWhitespaceSensitivity: "css",
+          jsxSingleQuote: true,
+        },
+      ],
+    },
+  },
+];

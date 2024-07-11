@@ -58,7 +58,7 @@ function SignUp() {
           </button>
         </div>
         <div className="flex items-center justify-center mt-2">
-          <p className="text-xs text-grey">webChatty 계정이 있으신가요?</p>
+          <p className="text-xs text-gray">webChatty 계정이 있으신가요?</p>
           <Link to="/">
             <p className="text-xs text-purple pl-3">로그인</p>
           </Link>
