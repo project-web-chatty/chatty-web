@@ -4,6 +4,6 @@ module.exports = {
   trailingComma: "all",
   arrowParens: "avoid",
   htmlWhitespaceSensitivity: "css",
-  jsxSingleQuote: true,
+  jsxSingleQuote: false,
   plugins: [require("prettier-plugin-tailwindcss")],
 };
