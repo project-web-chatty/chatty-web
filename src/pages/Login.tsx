@@ -42,7 +42,7 @@ function Login() {
           </button>
         </div>
         <div className="flex items-center justify-center mt-2">
-          <p className="text-xs text-grey">webChatty를 처음 사용하시나요?</p>
+          <p className="text-xs text-gray">webChatty를 처음 사용하시나요?</p>
           <Link to="/signup">
             <p className="text-xs text-purple pl-3">회원가입</p>
           </Link>
