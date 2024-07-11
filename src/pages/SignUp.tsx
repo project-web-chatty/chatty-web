@@ -4,14 +4,14 @@ import { Link } from "react-router-dom";
 function SignUp() {
   return (
     <div className="h-full p-20">
-      <div className="flex items-center justify-center">
+      <div className="flex m-auto w-96 items-center justify-center">
         <p className="text-3xl font-bold text-white">WELCOME TO&nbsp;</p>
         <p className="text-3xl font-bold text-orange">CHATTY</p>
       </div>
-      <div className="flex items-center justify-center pt-14">
+      <div className="flex m-auto w-96 items-center justify-center pt-10">
         <p className="text-xl font-bold text-white">SIGN UP</p>
       </div>
-      <div className="items-center pt-10 mx-96">
+      <div className="m-auto items-center pt-10 w-96">
         <p className="text-l font-bold text-white">ID</p>
         <div className="flex items-center mt-2 border-2 border-white w-full rounded-md p-2">
           <input
@@ -28,7 +28,7 @@ function SignUp() {
           </button>
         </div>
       </div>
-      <div className="items-center pt-5 mx-96">
+      <div className="m-auto items-center pt-10 w-96">
         <p className="text-l font-bold text-white">PASSWORD</p>
         <div className="flex items-center mt-2">
           <input
