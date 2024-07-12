@@ -8,7 +8,9 @@ function Login() {
     <div className="flex h-screen items-center justify-center p-20">
       <div className="flex w-4/5 flex-col items-center justify-center">
         <div>
-          <span className="hidden text-4xl font-bold text-white md:inline">WELCOME TO&nbsp;</span>
+          <span className="hidden text-4xl font-bold text-white md:inline">
+            WELCOME TO&nbsp;
+          </span>
           <span className="text-5xl font-bold text-orange">CHATTY</span>
         </div>
         <div className="w-full min-w-80 max-w-96 pt-10">
@@ -38,7 +40,10 @@ function Login() {
             </a>
           </div>
           <div className="mt-7 flex items-center justify-center">
-            <button type="button" className="h-12 w-full rounded-lg bg-black p-2 text-white">
+            <button
+              type="button"
+              className="h-12 w-full rounded-lg bg-black p-2 text-white"
+            >
               로그인
             </button>
           </div>

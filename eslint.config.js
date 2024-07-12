@@ -29,7 +29,13 @@ export default [
       "plugin:prettier/recommended",
       "prettier",
     ],
-    plugins: ["react", "react-hooks", "@typescript-eslint", "jsx-a11y", "prettier"],
+    plugins: [
+      "react",
+      "react-hooks",
+      "@typescript-eslint",
+      "jsx-a11y",
+      "prettier",
+    ],
     settings: {
       react: {
         version: "detect",
