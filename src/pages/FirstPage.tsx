@@ -1,4 +1,5 @@
 import icon_pencil from "../assets/icon/icon_pencil.png";
+import GroupIcon from "../components/GroupIcon";
 
 function FirstPage() {
   const newmember = true;
@@ -14,14 +15,12 @@ function FirstPage() {
               워크 스페이스
             </span>
           </div>
-          <div className="flex flex-col items-center justify-center h-full w-full">
-            <div className="flex items-center justify-center w-[80px] h-[80px] bg-white rounded-3xl">
-              <img src={icon_pencil} />
-            </div>
-            <p className="text-white text-xs font-semibold  mt-2">
-              새 그룹 만들기
-            </p>
+          <div className="flex flex-wrap justify-evenly items-center h-full w-full max-w-[600px] gap-5 pt-8 pb-8">
+            {Array.from({ length: 1 }).map((_, index) => (
+              <GroupIcon key={index} icon={icon_pencil} text="새 그룹 만들기" />
+            ))}
           </div>
+
           <div className="flex flex-col items-center justify-center w-full min-w-80">
             <p className="text-xl font-bold text-white p-8">초대 코드 입력</p>
             <div className="flex items-center justify-center w-full max-w-md rounded-md border-2 border-black bg-white pl-5 pr-2">
