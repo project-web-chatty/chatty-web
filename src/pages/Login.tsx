@@ -39,14 +39,16 @@ function Login() {
               비밀번호를 잊어버렸나요?
             </a>
           </div>
-          <div className="mt-7 flex items-center justify-center">
-            <button
-              type="button"
-              className="h-12 w-full rounded-lg bg-black p-2 text-white"
-            >
-              <Link to={"/firstpage"}>로그인</Link>
-            </button>
-          </div>
+          <Link to={"/firstpage"}>
+            <div className="mt-7 flex items-center justify-center">
+              <button
+                type="button"
+                className="h-12 w-full rounded-lg bg-black p-2 text-white"
+              >
+                로그인
+              </button>
+            </div>
+          </Link>
           <div className="mt-2 flex items-center justify-center">
             <p className="text-xs text-gray">webChatty를 처음 사용하시나요?</p>
             <Link to="/signup">

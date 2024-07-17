@@ -1,8 +1,24 @@
+import ReactModal from "react-modal";
 import GroupMenu from "../components/GroupIcon";
 import NewWorkspace from "../components/NewWorkspace";
+import { useState } from "react";
 
 function FirstPage({ name = "이동현" }: any) {
-  const newmember = true;
+  const [isOpen, setIsOpen] = useState(false);
+  const openModal = () => {
+    setIsOpen(true);
+  };
+  const closeModal = () => {
+    setIsOpen(false);
+  };
+  const customStyles = {
+    overlay: {
+      backgroundColor: "rgba(0,0,0,0.5)",
+    },
+    content: {
+      width: "600px",
+    },
+  };
 
   return (
     <div className="h-screen flex items-center justify-center">
@@ -13,8 +29,14 @@ function FirstPage({ name = "이동현" }: any) {
           </span>
           <span className="text-3xl font-bold text-orange">워크 스페이스</span>
         </h1>
-        {/* <GroupMenu /> */}
-        <NewWorkspace />
+        <GroupMenu openModal={openModal} />
+        <ReactModal
+          isOpen={isOpen}
+          onRequestClose={closeModal}
+          style={customStyles}
+        >
+          <NewWorkspace closeModal={closeModal} />
+        </ReactModal>
         <div className="flex flex-col items-center justify-center w-full min-w-80">
           <p className="text-xl font-bold text-white p-8">초대 코드 입력</p>
           <div className="flex items-center justify-center w-full max-w-md rounded-md border-2 border-black bg-white pl-5 pr-2">

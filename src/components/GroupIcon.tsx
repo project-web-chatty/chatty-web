@@ -7,17 +7,18 @@ export interface IGroupIcon {
   icon: string;
   text: string;
 }
+const logoClicked = () => {};
 
 const GroupIcon = ({ icon, text }: IGroupIcon) => (
-  <Link
-    to={"/newworkspace"}
+  <div
     className="flex flex-col items-center justify-self-auto"
+    onClick={logoClicked}
   >
     <div className="flex items-center justify-center w-[80px] h-[80px] bg-white rounded-3xl">
       <img src={icon} />
     </div>
     <p className="text-white text-xs font-semibold mt-2">{text}</p>
-  </Link>
+  </div>
 );
 
 const workspaces: IGroupIcon[] = [
@@ -25,13 +26,22 @@ const workspaces: IGroupIcon[] = [
   { icon: logo_toss, text: "토스팀" },
 ];
 
-const GroupMenu = () => {
+const GroupMenu = ({ ...props }: any) => {
   return (
     <div className="flex flex-wrap justify-evenly items-center h-full w-full max-w-[600px] gap-5 pt-8 pb-8">
       {workspaces.map((item, index) => (
         <GroupIcon key={index} icon={item.icon} text={item.text} />
       ))}
-      <GroupIcon icon={icon_pencil} text="새 그룹 만들기" />
+      {/* <GroupIcon icon={icon_pencil} text="새 그룹 만들기" /> */}
+      <div
+        className="flex flex-col items-center justify-self-auto"
+        onClick={props.openModal}
+      >
+        <div className="flex items-center justify-center w-[80px] h-[80px] bg-white rounded-3xl">
+          <img src={icon_pencil} />
+        </div>
+        <p className="text-white text-xs font-semibold mt-2">새 그룹 만들기</p>
+      </div>
     </div>
   );
 };

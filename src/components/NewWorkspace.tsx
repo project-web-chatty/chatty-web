@@ -1,7 +1,9 @@
 import icon_upload from "../assets/icon/icon_upload.png";
 import icon_close from "../assets/icon/icon_close.png";
 
-function NewWorkspace() {
+function NewWorkspace({ ...props }: any) {
+  console.log(props);
+
   return (
     <div className="flex justify-center items-center w-full max-w-[600px] min-w-80 gap-5 m-10 mb-2 p-8 bg-white rounded-xl">
       <div className="flex flex-col justify-between items-center gap-5 m-5 w-full">
@@ -11,6 +13,7 @@ function NewWorkspace() {
             className="w-6 h-6 absolute -top-5 -right-5"
             alt="닫기 아이콘"
             src={icon_close}
+            onClick={props.closeModal}
           ></img>
         </div>
         <div className="w-full mb-3">
