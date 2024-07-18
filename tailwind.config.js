@@ -7,19 +7,21 @@ module.exports = {
       lg: "976px",
       xl: "1440px",
     },
-    colors: {
-      body: "#2F3645",
-      chatting: "#444A55",
-      white: "#FFFFFF",
-      black: "#000000",
-      orange: "#DD5746",
-      purple: "#6562F5",
-      green: "#46DD5E",
-      gray: "#8C8C8C",
-      outerTab: "#272D3A",
-    },
+
     fontFamily: {},
-    extend: {},
+    extend: {
+      colors: {
+        body: "#2F3645",
+        chatting: "#444A55",
+        white: "#FFFFFF",
+        black: "#000000",
+        orange: "#DD5746",
+        purple: "#6562F5",
+        green: "#46DD5E",
+        gray: "#8C8C8C",
+        outerTab: "#272D3A",
+      },
+    },
   },
   plugins: [],
 };
