@@ -39,11 +39,11 @@ function Login() {
               비밀번호를 잊어버렸나요?
             </a>
           </div>
-          <Link to={"/firstpage"}>
-            <div className="mt-7 flex items-center justify-center">
+          <Link to={"/workspace"}>
+            <div className="mt-7 flex items-center justify-center ">
               <button
                 type="button"
-                className="h-12 w-full rounded-lg bg-black p-2 text-white"
+                className="h-12 w-full rounded-lg bg-black p-2 text-white hover:bg-opacity-50 drop-shadow-lg"
               >
                 로그인
               </button>
