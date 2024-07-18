@@ -1,9 +1,9 @@
 import ReactModal from "react-modal";
 import GroupMenu from "../components/GroupIcon";
-import NewWorkspace from "../components/NewWorkspace";
 import { useState } from "react";
+import WorkspaceForm from "../components/WorkspaceForm";
 
-function FirstPage({ name = "이동현" }: any) {
+function WorkSpace({ name = "이동현" }: any) {
   const [isOpen, setIsOpen] = useState(false);
   const openModal = () => {
     setIsOpen(true);
@@ -16,7 +16,12 @@ function FirstPage({ name = "이동현" }: any) {
       backgroundColor: "rgba(0,0,0,0.5)",
     },
     content: {
-      width: "600px",
+      top: "50%",
+      left: "50%",
+      right: "auto",
+      bottom: "auto",
+      marginRight: "-50%",
+      transform: "translate(-50%, -50%)",
     },
   };
 
@@ -31,15 +36,16 @@ function FirstPage({ name = "이동현" }: any) {
         </h1>
         <GroupMenu openModal={openModal} />
         <ReactModal
+          appElement={document.getElementById("root") as HTMLElement}
           isOpen={isOpen}
           onRequestClose={closeModal}
           style={customStyles}
         >
-          <NewWorkspace closeModal={closeModal} />
+          <WorkspaceForm closeModal={closeModal} />
         </ReactModal>
         <div className="flex flex-col items-center justify-center w-full min-w-80">
           <p className="text-xl font-bold text-white p-8">초대 코드 입력</p>
-          <div className="flex items-center justify-center w-full max-w-md rounded-md border-2 border-black bg-white pl-5 pr-2">
+          <div className=" flex items-center justify-center w-full max-w-md rounded-md border-2 border-black bg-white pl-5 pr-2">
             <input
               type="text"
               className="h-10 w-full focus:outline-none"
@@ -47,8 +53,7 @@ function FirstPage({ name = "이동현" }: any) {
             />
             <button
               type="button"
-              className="min-w-20 rounded-md bg-black p-1 text-white"
-              style={{ width: 80, marginLeft: 10 }}
+              className="min-w-20 rounded-md bg-black p-1 text-white hover:bg-opacity-80 drop-shadow-lg"
             >
               참여
             </button>
@@ -58,4 +63,4 @@ function FirstPage({ name = "이동현" }: any) {
     </div>
   );
 }
-export default FirstPage;
+export default WorkSpace;
