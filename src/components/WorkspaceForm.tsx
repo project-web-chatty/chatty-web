@@ -1,14 +1,18 @@
 import React, { useState } from "react";
 import icon_upload from "../assets/icon/icon_upload.png";
 import icon_close from "../assets/icon/icon_close.png";
+import { useDispatch } from "react-redux";
+import { addWorkspace } from "../features/workspaceSlice";
 
 interface WorkspaceFormProps {
   closeModal: () => void;
 }
 
 const WorkspaceForm: React.FC<WorkspaceFormProps> = ({ closeModal }) => {
-  const [workspaceName, setWorkspaceName] = useState("");
-  const [workspaceDescription, setWorkspaceDescription] = useState("");
+  const [workspaceName, setWorkspaceName] = useState<string>("");
+  const [workspaceDescription, setWorkspaceDescription] = useState<string>("");
+  const [workspaceIcon, setWorkspaceIcon] = useState<string>(icon_upload);
+  const dispatch = useDispatch();
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setWorkspaceName(e.target.value);
@@ -18,11 +22,28 @@ const WorkspaceForm: React.FC<WorkspaceFormProps> = ({ closeModal }) => {
     setWorkspaceDescription(e.target.value);
   };
 
+  const handleIconChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target && event.target.result) {
+          setWorkspaceIcon(event.target.result as string);
+        }
+      };
+      reader.readAsDataURL(e.target.files[0]);
+    }
+  };
+
   const handleFormSubmit = () => {
-    // 워크스페이스 생성 로직 추가
-    console.log("Workspace Name:", workspaceName);
-    console.log("Workspace Description:", workspaceDescription);
-    closeModal();
+    if (workspaceName && workspaceDescription) {
+      const newWorkspace = {
+        icon: workspaceIcon,
+        text: workspaceName,
+        route: `/workspace/${workspaceName}`,
+      };
+      dispatch(addWorkspace(newWorkspace));
+      closeModal();
+    }
   };
 
   return (
@@ -60,11 +81,19 @@ const WorkspaceForm: React.FC<WorkspaceFormProps> = ({ closeModal }) => {
         <div className="flex items-center justify-between w-full">
           <div className="flex justify-center items-center">
             <p className="mr-2">로고 업로드</p>
-            <img
-              className="w-6 cursor-pointer"
-              alt="업로드아이콘"
-              src={icon_upload}
+            <input
+              type="file"
+              onChange={handleIconChange}
+              className="hidden"
+              id="icon-upload"
             />
+            <label htmlFor="icon-upload">
+              <img
+                className="w-6 cursor-pointer"
+                alt="업로드아이콘"
+                src={workspaceIcon}
+              />
+            </label>
           </div>
           <button
             type="button"

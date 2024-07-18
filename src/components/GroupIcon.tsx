@@ -1,9 +1,9 @@
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useCallback } from "react";
-
+import { useSelector } from "react-redux";
+import { RootState } from "../store/store_login";
 import icon_pencil from "../assets/icon/icon_pencil.png";
-import logo_coupang from "../assets/logo/logo_coupang.png";
-import logo_toss from "../assets/logo/logo_toss.png";
 
 export interface IGroupIcon {
   icon: string;
@@ -11,11 +11,11 @@ export interface IGroupIcon {
   route?: string;
 }
 
-const GroupIcon = ({
+const GroupIcon: React.FC<IGroupIcon & { onClick: () => void }> = ({
   icon,
   text,
   onClick,
-}: IGroupIcon & { onClick: () => void }) => (
+}) => (
   <div
     className="flex flex-col items-center justify-self-auto"
     onClick={onClick}
@@ -27,17 +27,15 @@ const GroupIcon = ({
   </div>
 );
 
-const workspaces: IGroupIcon[] = [
-  { icon: logo_coupang, text: "쿠팡", route: "/workspace/coupang" },
-  { icon: logo_toss, text: "토스팀", route: "/workspace/toss" },
-];
-
 interface GroupMenuProps {
   openModal: () => void;
 }
 
-const GroupMenu = ({ openModal }: GroupMenuProps) => {
+const GroupMenu: React.FC<GroupMenuProps> = ({ openModal }) => {
   const navigate = useNavigate();
+  const workspaces = useSelector(
+    (state: RootState) => state.workspace.workspaces
+  );
 
   const openWorkSpace = useCallback(
     (route?: string) => {

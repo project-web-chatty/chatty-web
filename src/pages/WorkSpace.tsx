@@ -3,7 +3,11 @@ import GroupMenu from "../components/GroupIcon";
 import { useState } from "react";
 import WorkspaceForm from "../components/WorkspaceForm";
 
-function WorkSpace({ name = "이동현" }: any) {
+interface WorkSpaceProps {
+  name?: string;
+}
+
+const WorkSpace: React.FC<WorkSpaceProps> = ({ name = "이동현" }) => {
   const [isOpen, setIsOpen] = useState(false);
   const openModal = () => {
     setIsOpen(true);
@@ -62,5 +66,6 @@ function WorkSpace({ name = "이동현" }: any) {
       </div>
     </div>
   );
-}
+};
+
 export default WorkSpace;
