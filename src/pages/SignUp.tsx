@@ -9,7 +9,13 @@ const SignUp: React.FC = () => {
   const [usernameError, setUsernameError] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [isPasswordValid, setIsPasswordValid] = useState(false);
+  const [passwordCriteria, setPasswordCriteria] = useState({
+    length: false,
+    lowercase: false,
+    uppercase: false,
+    number: false,
+    specialChar: false,
+  });
   const [isPasswordMatch, setIsPasswordMatch] = useState(false);
 
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,8 +47,7 @@ const SignUp: React.FC = () => {
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newPassword = e.target.value;
     setPassword(newPassword);
-    const isValid = validatePassword(newPassword);
-    setIsPasswordValid(isValid);
+    validatePassword(newPassword);
     setIsPasswordMatch(newPassword === confirmPassword);
   };
 
@@ -55,14 +60,20 @@ const SignUp: React.FC = () => {
   };
 
   const validatePassword = (password: string) => {
-    const passwordRegex =
-      /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!])(?!.*\s).{8,}$/;
-    // 비밀번호 : 최소 8자 이상, 최소한 하나의 대문자, 하나의 소문자, 하나의 숫자, 하나의 특수문자를 포함, 공백 허용하지 않음
-    return passwordRegex.test(password);
+    const criteria = {
+      length: password.length >= 8 && password.length <= 20,
+      lowercase: /[a-z]/.test(password),
+      uppercase: /[A-Z]/.test(password),
+      number: /\d/.test(password),
+      specialChar: /[@$!%*?&]/.test(password),
+    };
+    setPasswordCriteria(criteria);
   };
 
-  // const isFormValid = isUsernameUnique && isPasswordValid && isPasswordMatch;
-  const isFormValid = isPasswordValid && isPasswordMatch;
+  const isFormValid =
+    isUsernameUnique &&
+    Object.values(passwordCriteria).every(Boolean) &&
+    isPasswordMatch;
 
   return (
     <div className="flex h-screen items-center justify-center">
@@ -79,7 +90,7 @@ const SignUp: React.FC = () => {
         <div className="w-full min-w-80 max-w-96">
           <div>
             <p className="text-l font-bold text-white">ID</p>
-            <div className="mt-2 flex h-12 w-full items-center justify-between rounded-md border-2 border-white px-5">
+            <div className="mt-2 flex h-12 w-full items-center justify-between rounded-md border-2 border-white px-5 mb-2">
               <input
                 type="text"
                 className="bg-body text-white focus:outline-none"
@@ -113,13 +124,41 @@ const SignUp: React.FC = () => {
                 value={password}
                 onChange={handlePasswordChange}
               />
-              <div>
-                <p
-                  className={`text-xs ${isPasswordValid ? "text-green" : "text-orange"}`}
-                >
-                  영문(소문자와 대문자), 숫자, 특수문자 포함 8자 ~ 20자
-                </p>
-              </div>
+              {password && (
+                <div className="flex flex-col">
+                  <div className="flex gap-5">
+                    <p
+                      className={`text-xs ${passwordCriteria.lowercase ? "text-green" : "text-orange"}`}
+                    >
+                      소문자 포함{passwordCriteria.lowercase ? "✅" : "❌"}
+                    </p>
+                    <p
+                      className={`text-xs ${passwordCriteria.uppercase ? "text-green" : "text-orange"}`}
+                    >
+                      대문자 포함{passwordCriteria.uppercase ? "✅" : "❌"}
+                    </p>
+                    <p
+                      className={`text-xs ${passwordCriteria.number ? "text-green" : "text-orange"}`}
+                    >
+                      숫자 포함{passwordCriteria.number ? "✅" : "❌"}
+                    </p>
+                  </div>
+                  <div className="flex gap-5">
+                    <p
+                      className={`text-xs ${passwordCriteria.length ? "text-green" : "text-orange"}`}
+                    >
+                      8자 이상 20자 이하{passwordCriteria.length ? "✅" : "❌"}
+                    </p>
+
+                    <p
+                      className={`text-xs ${passwordCriteria.specialChar ? "text-green" : "text-orange"}`}
+                    >
+                      특수문자 포함{passwordCriteria.specialChar ? "✅" : "❌"}
+                    </p>
+                  </div>
+                </div>
+              )}
+
               <input
                 type="password"
                 className="h-12 w-full rounded-md border-2 border-white bg-body px-5 text-white focus:outline-none"
