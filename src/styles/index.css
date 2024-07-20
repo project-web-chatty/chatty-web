@@ -4,9 +4,9 @@
 
 @layer base {
   body {
-    @apply w-full h-full bg-body;
+    @apply h-full w-full bg-body;
   }
   html {
-    @apply w-full h-full;
+    @apply h-full w-full;
   }
 }
