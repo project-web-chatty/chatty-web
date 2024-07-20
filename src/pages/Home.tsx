@@ -9,11 +9,32 @@ import Search from "../styles/images/search.png";
 import People from "../styles/images/people.png";
 import Clip from "../styles/images/clipicon.png";
 import SendMessage from "../styles/images/sendMessage.png";
+import Upload from "../styles/images/upload.png";
 import ChattingContainer from "../components/ChattingContainer";
+import Modal from "../components/Modal";
+import MenuModal from "../components/MenuModal";
+
+//Message 인터페이스 정의
+interface Message {
+  id: number;
+  nickname: string;
+  profile: string;
+  chatting: string;
+  time: string;
+  isMe: boolean;
+}
+interface Member {
+  id: number;
+  nickname: string;
+  profile: string;
+  isManager: boolean;
+}
 
 function Home() {
-  const [messages, setMessages] = useState([
+  //messages 상태 변수와 setMessages 함수 정의
+  const [messages, setMessages] = useState<Message[]>([
     {
+      id: 1,
       nickname: "양준석(팀장)",
       profile: People,
       chatting: `안녕하세요 프론트엔드 팀원 여러분,
@@ -35,6 +56,7 @@ function Home() {
       isMe: false,
     },
     {
+      id: 2,
       nickname: "아무개",
       profile: People,
       chatting: `신규 개발 중인 개인정보 수정 탭의 사이드 탭의 UI 개발 을 맡고
@@ -44,6 +66,7 @@ function Home() {
       isMe: true,
     },
     {
+      id: 3,
       nickname: "김민수",
       profile: People,
       chatting: `저랑 이지현 팀원이 개발 중에 있습니다! 진척 상황 노션에
@@ -52,6 +75,7 @@ function Home() {
       isMe: false,
     },
     {
+      id: 4,
       nickname: "아무게",
       profile: People,
       chatting: `신규 개발 중인 개인정보 수정 탭의 사이드 탭의 UI 개발 을 맡고
@@ -61,12 +85,138 @@ function Home() {
       isMe: true,
     },
   ]);
+
+  const [members, setMembers] = useState<Member[]>([
+    {
+      id: 1,
+      nickname: "임준식",
+      profile: People,
+      isManager: false,
+    },
+    {
+      id: 2,
+      nickname: "최만구",
+      profile: People,
+      isManager: false,
+    },
+    {
+      id: 3,
+      nickname: "이승수",
+      profile: People,
+      isManager: false,
+    },
+    {
+      id: 4,
+      nickname: "손구근",
+      profile: People,
+      isManager: false,
+    },
+  ]);
+
+  const [isWorkspaceModalOpen, setIsWorkspaceModalOpen] = useState(false);
+
+  const openWorkspaceModal = () => setIsWorkspaceModalOpen(true);
+  const closeWorkspaceModal = () => setIsWorkspaceModalOpen(false);
+
+  const [isMenuOpen, setMenuOpen] = useState(false);
+  const [selectedModal, setSelectedModal] = useState<string | null>(null);
+
+  const toggleMenu = () => {
+    setMenuOpen(!isMenuOpen);
+  };
+
+  const handleMenuItemClick = (item: string) => {
+    setSelectedModal(item);
+    toggleMenu();
+  };
+
+  const closeModal = () => {
+    setSelectedModal(null);
+  };
+
+  //input 상태 변수와 setInput 함수 정의
+  const [input, setInput] = useState<string>("");
+  //isComposing 상태 변수와 setIsComposing 함수 정의
+  //조합상태감지를 위한 상태변수. 조합문자란, 아직 완성되지 않은 문자로, 여러 키 입력이 조합되어 최종문자가 만들어지는 과정을 말함(한글, 중국어, 일본어 등).
+  const [isComposing, setIsComposing] = useState<boolean>(false);
+  //chatEndRef ref 변수 정의
+  const chatEndRef = useRef<HTMLDivElement>(null);
+
+  //messages 상태가 변경될 때마다 chatEndRef를 이용해 스크롤을 끝으로 이동
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  //입력값 변경 핸들러
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+  };
+
+  //메세지 전송 핸들러
+  const handleSendMessage = () => {
+    if (input.trim()) {
+      setMessages((prevMessages) => {
+        //이전 메세지 배열이 비어 있는지 확인하고, 비어 있지 않으면 마지막 메세지의 id를 가져옴
+        const newId =
+          prevMessages.length > 0
+            ? prevMessages[prevMessages.length - 1].id + 1
+            : 1;
+        return [
+          ...prevMessages,
+          {
+            id: newId,
+            nickname: "아무게",
+            profile: People,
+            chatting: input,
+            time: new Date().toLocaleTimeString(),
+            isMe: true,
+          },
+        ];
+      });
+      setInput("");
+    }
+  };
+
+  //키다운 핸들러(Enter 키 입력 시 메세지 전송)
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      if (!isComposing) {
+        handleSendMessage();
+      }
+    }
+  };
+
+  //입력 구성 시작 핸들러
+  const handleCompositionStart = () => {
+    setIsComposing(true);
+  };
+
+  //입력 구성 끝 핸들러
+  const handleCompositionEnd = (
+    e: React.CompositionEvent<HTMLTextAreaElement>,
+  ) => {
+    setIsComposing(false);
+    setInput(e.currentTarget.value);
+  };
+
+  //키업 핸들러 (Enter 키 입력 시 메세지 전송)
+  const handleKeyUp = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey && !isComposing) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
   return (
     <div className="flex">
       <div className="w-24 min-h-screen flex flex-col justify-between bg-outerTab">
         <div className="mx-auto mt-6 bg-white w-10 h-10 rounded-md"></div>
         <div className="mx-auto mb-6">
-          <div className="bg-white inset-x-0 bottom-0 rounded-xl mb-6">
+          <div
+            className="bg-white inset-x-0 bottom-0 rounded-xl mb-6"
+            onClick={openWorkspaceModal}
+          >
             <img className="w-10 h-10" src={MessageLogo} alt="" />
           </div>
           <img
@@ -81,12 +231,16 @@ function Home() {
         <div>
           <div className="flex justify-between items-center">
             <p className="text-xl font-bold text-white">Channel Name</p>
+            {/* <div onClick={toggleMenu}> */}
             <img
               className="inset-x-0 bottom-0 w-5 h-2"
               src={ArrowDown}
               alt=""
+              onClick={toggleMenu}
             />
+            {/* </div> */}
           </div>
+          {/* <CustomSelect options={options} /> */}
           <div className="border border-white w-full mt-5"></div>
           <div style={{ overflowY: "auto", height: "calc(100vh - 120px)" }}>
             <div className="flex my-5 justify-between">
@@ -99,11 +253,9 @@ function Home() {
             </div>
             <div className="flex my-5 justify-between">
               <p className="text-sm font-bold text-white"># frontend</p>
-              {/* <p className="text-xs text-gray">5 new messaages</p> */}
             </div>
             <div className="flex my-5 justify-between">
               <p className="text-sm font-bold text-white"># schedule</p>
-              {/* <p className="text-xs text-gray">5 new messaages</p> */}
             </div>
           </div>
           <div className="flex">
@@ -116,39 +268,143 @@ function Home() {
         className="bg-chatting min-h-screen flex flex-col p-6"
         style={{ width: "calc(100vw - 24rem)" }}
       >
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center pb-6">
           <p className="text-xl font-bold text-white"># FRONTEND</p>
           <img className="w-5 h-5" src={Search} alt="" />
         </div>
         <div
           id="chatContanier"
-          //   className="bg-green mt-6"
-          className="mt-6 px-2"
-          style={{ overflowY: "auto", height: "calc(100vh - 172px)" }}
+          className="px-2 overflow-y-auto"
+          style={{ height: "calc(100vh - 172px)" }}
         >
-          {messages.map(
-            ({ nickname, profile, chatting, time, isMe }, index) => (
+          {messages.map(({ id, nickname, profile, chatting, time, isMe }) => (
+            <>
               <ChattingContainer
-                key={index}
+                key={id}
                 nickname={nickname}
                 profile={profile}
                 chatting={chatting}
                 time={time}
                 isMe={isMe}
               />
-            ),
-          )}
+            </>
+          ))}
+          <div ref={chatEndRef}></div>
         </div>
         <div className="w-full h-12 bg-white flex items-center justify-between mt-6 rounded-lg px-3">
-          <img id="profile" className="w-5 h-5" src={Clip} alt="" />
+          <img id="clip" className="w-5 h-5" src={Clip} alt="" />
           <textarea
-            className="w-full h-12 mx-3 focus:outline-none"
+            className="w-full h-12 mx-3 focus:outline-none resize-none flex-1"
             style={{ resize: "none" }}
             placeholder="메세지를 입력해주세요."
+            value={input}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+            onKeyUp={handleKeyUp}
+            onCompositionStart={handleCompositionStart}
+            onCompositionEnd={handleCompositionEnd}
           />
-          <img id="profile" className="w-5 h-5" src={SendMessage} alt="" />
+          <button onClick={handleSendMessage}>
+            <img id="submit" className="w-5 h-5" src={SendMessage} alt="" />
+          </button>
         </div>
       </div>
+      <Modal
+        isOpen={isWorkspaceModalOpen}
+        onClose={closeWorkspaceModal}
+        title={"새 워크스페이스 만들기"}
+      >
+        <div className="py-5">
+          <p className="text-sm">워크스페이스 이름</p>
+          <input
+            type="text"
+            className="border-2 border-black w-full p-2 rounded-md text-sm focus:outline-none mt-2"
+            placeholder="이름을 정해주세요."
+          />
+          <p className="text-sm mt-5">소개</p>
+          <input
+            type="text"
+            className="border-2 border-black w-full p-2 rounded-md text-sm focus:outline-none mt-2"
+            placeholder="소개글을 작성해주세요."
+          />
+          <div className="flex justify-between mt-5 items-center">
+            <div className="flex">
+              <p className="text-sm">로고 업로드</p>
+              <img id="clip" className="w-5 h-5 ml-5" src={Upload} alt="" />
+            </div>
+            <button className="bg-black text-sm text-white py-1 px-5 rounded-md">
+              생성 하기
+            </button>
+          </div>
+        </div>
+      </Modal>
+      <MenuModal
+        isOpen={isMenuOpen}
+        onClose={toggleMenu}
+        onMenuItemClick={handleMenuItemClick}
+      />
+      <Modal
+        isOpen={!!selectedModal}
+        onClose={closeModal}
+        title={selectedModal}
+      >
+        {selectedModal === "새 채널 만들기" && (
+          <div className="py-5">
+            <p className="text-sm">채널 이름</p>
+            <input
+              type="text"
+              className="border-2 border-black w-full p-2 rounded-md text-sm focus:outline-none mt-2"
+              placeholder="이름을 정해주세요."
+            />
+            <div className="flex justify-end mt-5 items-center">
+              <button className="bg-purple text-sm text-white py-1 px-5 rounded-md">
+                생성하기
+              </button>
+            </div>
+          </div>
+        )}
+        {selectedModal === "워크스페이스 이름 변경하기" && (
+          <div className="py-5">
+            <p className="text-sm">서버 이름</p>
+            <input
+              type="text"
+              className="border-2 border-black w-full p-2 rounded-md text-sm focus:outline-none mt-2"
+              placeholder="이름을 정해주세요."
+            />
+            <div className="flex justify-end mt-5 items-center">
+              <button className="bg-purple text-sm text-white py-1 px-5 rounded-md">
+                변경하기
+              </button>
+            </div>
+          </div>
+        )}
+        {selectedModal === "멤버 관리하기" && (
+          <div>
+            <div className="p-5 flex items-center bg-lightGray rounded-lg mt-3">
+              <div className="flex flex-wrap gap-4">
+                {members.map((member) => (
+                  <div key={member.id} className="flex items-center ml-2">
+                    <img
+                      className="w-5 h-5 rounded-xl"
+                      src={member.profile}
+                      alt=""
+                    />
+                    <p className="text-xs mx-3">{member.nickname}</p>
+                    <button className="text-gray-500 hover:text-gray-700 mr-4">
+                      &times;
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="flex justify-end mt-5 items-center">
+              <button className="bg-purple text-sm text-white py-1 px-5 rounded-md">
+                변경하기
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }
