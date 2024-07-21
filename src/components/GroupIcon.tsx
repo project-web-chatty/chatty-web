@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useCallback } from "react";
 import { useSelector } from "react-redux";
-import { RootState } from "../store/store_login";
+import { RootState } from "../store/store";
 import icon_pencil from "../assets/icon/icon_pencil.png";
 
 export interface IGroupIcon {
