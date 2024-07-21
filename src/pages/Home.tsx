@@ -404,6 +404,16 @@ function Home() {
             </div>
           </div>
         )}
+        {selectedModal === "초대링크 생성하기" && (
+           <div className="py-5">
+           <p className="text-sm">초대링크</p>
+           <input
+             type="text"
+             className="border-2 border-black w-full p-2 rounded-md text-sm focus:outline-none mt-2"
+             placeholder="초대링크를 입력해주세요."
+           />
+         </div>
+        )}
       </Modal>
     </div>
   );

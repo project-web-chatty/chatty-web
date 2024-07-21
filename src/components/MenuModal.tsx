@@ -31,7 +31,7 @@ function MenuModal({ isOpen, onClose, onMenuItemClick }: any) {
         </li>
         <li
           className="p-4 hover:text-orange cursor-pointer text-white"
-          onClick={() => handleItemClick("초대 링크 생성하기")}
+          onClick={() => handleItemClick("초대링크 생성하기")}
         >
           초대 링크
         </li>
