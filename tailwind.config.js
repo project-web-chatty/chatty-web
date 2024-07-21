@@ -7,7 +7,6 @@ module.exports = {
       lg: "976px",
       xl: "1440px",
     },
-
     fontFamily: {},
     extend: {
       colors: {
@@ -20,6 +19,7 @@ module.exports = {
         green: "#46DD5E",
         gray: "#8C8C8C",
         outerTab: "#272D3A",
+        lightGray: "#D9D9D9",
       },
     },
   },
