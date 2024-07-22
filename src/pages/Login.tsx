@@ -57,7 +57,11 @@ function Login() {
           </div>
         </div>
         <div className="flex w-full min-w-80 flex-col items-center justify-center">
-          <hr className="my-8 h-px w-full max-w-96 border-0 bg-white" />{" "}
+          <div className="flex justify-center items-center w-full min-w-80 max-w-96 ">
+            <hr className="my-8 h-px w-full max-w-96 bg-white" />
+            <div className="text-center text-white text-xs w-[100px]">또는</div>
+            <hr className="my-8 h-px w-full max-w-96 bg-white" />
+          </div>
           <div className="flex gap-20">
             <a href="#">
               <img src={logo_google} className="h-10 w-10" />
