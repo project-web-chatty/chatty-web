@@ -1,17 +1,17 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
-import HomeLogo from "../assets/image/logo_home.png";
-import MessageLogo from "../assets/image/logo_message.png";
-import UserLogo from "../assets/image/logo_user.png";
-import ArrowDown from "../assets/image/logo_arrowDown.png";
-import PlusCircle from "../assets/image/logo_plusCircle.png";
-import Search from "../assets/image/logo_search.png";
-import People from "../assets/image/logo_people.png";
-import Clip from "../assets/image/logo_clipicon.png";
-import SendMessage from "../assets/image/logo_sendMessage.png";
-import Upload from "../assets/image/logo_upload.png";
-import LinkLogo from "../assets/image/logo_link.png";
-import CopyLogo from "../assets/image/logo_copy.png";
+import HomeLogo from "../assets/icon/icon_home.png";
+import MessageLogo from "../assets/icon/icon_message.png";
+import UserLogo from "../assets/icon/icon_user.png";
+import ArrowDown from "../assets/icon/icon_arrowDown.png";
+import PlusCircle from "../assets/icon/icon_plusCircle.png";
+import Search from "../assets/icon/icon_search.png";
+import People from "../assets/icon/icon_people.png";
+import Clip from "../assets/icon/icon_clipicon.png";
+import SendMessage from "../assets/icon/icon_sendMessage.png";
+import Upload from "../assets/icon/icon_upload.png";
+import LinkLogo from "../assets/icon/icon_link.png";
+import CopyLogo from "../assets/icon/icon_copy.png";
 import ChattingContainer from "../components/ChattingContainer";
 import Modal from "../components/Modal"; //기본 Modal 컴포넌트
 import MenuModal from "../components/MenuModal"; //Channel Name 우측 화살표를 누르면 나오는 메뉴 Options
@@ -299,6 +299,12 @@ function Home() {
         </div>
         <div className="w-full h-12 bg-white flex items-center justify-between mt-6 rounded-lg px-3">
           <img id="clip" className="w-5 h-5" src={Clip} alt="" />
+          {/*
+            1. onKeyDown : 키를 누르기 시작할 때 발생하는 이벤트. 키가 눌려있는 동안 여러 번 발생할 수도 있다.
+            2. onKeyUp : 키를 놓을 때 발생하는 이벤트.
+            3. onCompositionStart : 사용자가 텍스트 입력을 시작할 때 발생. 주로 입력기가 활성화될 대 발생하며, 다국어 입력 시 조합 문자를 입력하기 시작할 때 트리거 됨.
+            4. onCompositionEnd : 사용자가 텍스트 입력을 완료했을 때 발생. 조합 문자가 완성되거나 입력이 종료될 때 트리거 됨.
+          */}
           <textarea
             className="w-full h-12 mx-3 focus:outline-none resize-none flex-1"
             style={{ resize: "none" }}
