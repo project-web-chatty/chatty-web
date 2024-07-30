@@ -5,6 +5,7 @@ import Login from "./pages/Login";
 import Home from "./pages/Home";
 import WorkSpace from "./pages/WorkSpace";
 import NotFound from "./pages/NotFound";
+import UserSetting from "./pages/UserSetting";
 
 function App() {
   return (
@@ -14,6 +15,8 @@ function App() {
         <Route path="/workspace" element={<WorkSpace />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/home" element={<Home />} />
+        <Route path="/usersetting" element={<UserSetting />} />
+
         <Route path="/*" element={<NotFound />} />
       </Routes>
     </div>
