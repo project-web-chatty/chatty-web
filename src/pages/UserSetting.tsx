@@ -1,8 +1,8 @@
 import { useState } from "react";
-import HomeLogo from "../styles/images/home-logo.png";
-import MessageLogo from "../styles/images/message-logo.png";
-import UserLogo from "../styles/images/user-logo.png";
-import image_profile from "../assets/image/image_profile-simple.png";
+import HomeLogo from "../assets/icon/icon_home.png";
+import MessageLogo from "../assets/icon/icon_message.png";
+import UserLogo from "../assets/icon/icon_profile-person.png";
+import ProfileImg from "../assets/icon/icon_profile-person.png";
 
 function UserSetting() {
   const [isWorkspaceModalOpen, setIsWorkspaceModalOpen] = useState(false);
@@ -40,7 +40,7 @@ function UserSetting() {
             <div id="picture" className="h-full bg-white mr-20">
               <img
                 className="h-full w-full max-w-52 min-w-40"
-                src={image_profile}
+                src={ProfileImg}
                 alt="프로필 미지정 이미지"
               />
             </div>
