@@ -5,10 +5,12 @@ import UserLogo from "../assets/icon/icon_profile-person.png";
 import ProfileImg from "../assets/icon/icon_profile-person.png";
 import ReactModal from "react-modal";
 import ButtonModal from "../components/ButtonModal";
+import PasswordEditingModal from "../components/PasswordEditingModal";
 
 function UserSetting() {
   const [isOpen, setIsOpen] = useState(false);
   const [modalSetting, setModalSetting] = useState("");
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
   const openModal = (setting: string) => {
     setModalSetting(setting);
@@ -30,6 +32,20 @@ function UserSetting() {
     console.log("Deleting account...");
     // 계정 삭제 로직을 여기에 추가
     closeModal();
+  };
+
+  const openPasswordModal = () => {
+    setIsPasswordModalOpen(true);
+  };
+
+  const closePasswordModal = () => {
+    setIsPasswordModalOpen(false);
+  };
+
+  const passwordChangeHandler = () => {
+    console.log("Changing password...");
+    // 비밀번호 변경 로직을 여기에 추가
+    closePasswordModal();
   };
 
   const customStyles = {
@@ -109,13 +125,14 @@ function UserSetting() {
           <button
             type="button"
             className="h-12 w-full rounded-lg bg-white p-2 hover:bg-opacity-50 drop-shadow-lg border-2 border-black font-semibold"
+            onClick={openPasswordModal}
           >
             비밀번호 변경하기
           </button>
         </div>
         <div className="max-w-md">
           <h2 className="text-white font-bold text-4xl">Account Setting</h2>
-          <div className="border border-white w-full my-5 "></div>
+          <div className="border border-white w-full my-5"></div>
           <div className="flex justify-between gap-5">
             <button
               onClick={() => openModal("로그아웃")}
@@ -145,6 +162,18 @@ function UserSetting() {
                     ? logoutHandler
                     : deleteAccountHandler
                 }
+              />
+            </ReactModal>
+            <ReactModal
+              appElement={document.getElementById("root") as HTMLElement}
+              isOpen={isPasswordModalOpen}
+              onRequestClose={closePasswordModal}
+              style={customStyles}
+            >
+              <PasswordEditingModal
+                closeModal={closePasswordModal}
+                setting="비밀번호 수정"
+                onConfirm={passwordChangeHandler}
               />
             </ReactModal>
           </div>
