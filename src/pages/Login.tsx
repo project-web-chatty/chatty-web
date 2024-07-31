@@ -1,9 +1,40 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState, ChangeEvent } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { Link, useNavigate } from "react-router-dom";
 import logo_google from "../assets/logo/logo_google.png";
 import logo_github from "../assets/logo/logo_github.png";
+import { RootState, AppDispatch } from "../store/store";
+import { login } from "../features/authSlice";
 
-function Login() {
+const API_URL = "https://api.example.com";
+
+const Login: React.FC = () => {
+  const dispatch = useDispatch<AppDispatch>(); // AppDispatch 타입 지정
+  const navigate = useNavigate();
+  const { loading, error } = useSelector((state: RootState) => state.auth);
+
+  const [username, setUsername] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+
+  const handleLogin = async () => {
+    try {
+      const resultAction = await dispatch(login({ username, password }));
+      if (login.fulfilled.match(resultAction)) {
+        navigate("/workspace");
+      } else {
+        if (login.rejected.match(resultAction)) {
+          console.error(resultAction.payload || "Login failed");
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleSocialLogin = (provider: string) => {
+    window.location.href = `${API_URL}/auth/${provider}`;
+  };
+
   return (
     <div className="flex h-screen items-center justify-center p-20">
       <div className="flex w-4/5 flex-col items-center justify-center">
@@ -21,6 +52,10 @@ function Login() {
                 type="text"
                 className="h-12 w-full rounded-md border-2 border-white bg-body px-5 text-white focus:outline-none"
                 placeholder="아이디를 입력해주세요."
+                value={username}
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                  setUsername(e.target.value)
+                }
               />
             </div>
           </div>
@@ -28,9 +63,13 @@ function Login() {
             <p className="text-l font-bold text-white">PASSWORD</p>
             <div className="mt-2 flex items-center">
               <input
-                type="text"
+                type="password"
                 className="h-12 w-full rounded-md border-2 border-white bg-body px-5 text-white focus:outline-none"
                 placeholder="비밀번호를 입력해주세요."
+                value={password}
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                  setPassword(e.target.value)
+                }
               />
             </div>
           </div>
@@ -39,16 +78,17 @@ function Login() {
               비밀번호를 잊어버렸나요?
             </a>
           </div>
-          <Link to={"/workspace"}>
-            <div className="mt-7 flex items-center justify-center ">
-              <button
-                type="button"
-                className="h-12 w-full rounded-lg bg-black p-2 text-white hover:bg-opacity-50 drop-shadow-lg"
-              >
-                로그인
-              </button>
-            </div>
-          </Link>
+          <div className="mt-7 flex items-center justify-center">
+            <button
+              type="button"
+              className="h-12 w-full rounded-lg bg-black p-2 text-white hover:bg-opacity-50 drop-shadow-lg"
+              onClick={handleLogin}
+              disabled={loading}
+            >
+              {loading ? "로그인 중..." : "로그인"}
+            </button>
+          </div>
+          {error && <p className="text-red-500">{error}</p>}
           <div className="mt-2 flex items-center justify-center">
             <p className="text-xs text-gray">webChatty를 처음 사용하시나요?</p>
             <Link to="/signup">
@@ -57,23 +97,23 @@ function Login() {
           </div>
         </div>
         <div className="flex w-full min-w-80 flex-col items-center justify-center">
-          <div className="flex justify-center items-center w-full min-w-80 max-w-96 ">
-            <hr className="my-8 h-px w-full max-w-96 bg-white" />
+          <div className="flex justify-center items-center w-full min-w-80 max-w-96">
+            <hr className="my-8 h-px w-full max-w-96 border-white" />
             <div className="text-center text-white text-xs w-[100px]">또는</div>
-            <hr className="my-8 h-px w-full max-w-96 bg-white" />
+            <hr className="my-8 h-px w-full max-w-96 border-white" />
           </div>
           <div className="flex gap-20">
-            <a href="#">
+            <button onClick={() => handleSocialLogin("google")}>
               <img src={logo_google} className="h-10 w-10" />
-            </a>
-            <a href="#">
+            </button>
+            <button onClick={() => handleSocialLogin("github")}>
               <img src={logo_github} className="h-10 w-10" />
-            </a>
+            </button>
           </div>
         </div>
       </div>
     </div>
   );
-}
+};
 
 export default Login;
