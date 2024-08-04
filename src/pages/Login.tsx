@@ -1,12 +1,14 @@
 import React, { useState, ChangeEvent } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 import logo_google from "../assets/logo/logo_google.png";
 import logo_github from "../assets/logo/logo_github.png";
 import { RootState, AppDispatch } from "../store/store";
 import { login } from "../features/authSlice";
 
-const API_URL = "https://api.example.com";
+const API_URL =
+  "http://ec2-3-34-211-45.ap-northeast-2.compute.amazonaws.com:8080/api/auth";
 
 const Login: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>(); // AppDispatch 타입 지정
@@ -18,16 +20,23 @@ const Login: React.FC = () => {
 
   const handleLogin = async () => {
     try {
-      const resultAction = await dispatch(login({ username, password }));
-      if (login.fulfilled.match(resultAction)) {
+      const response = await axios.post(`${API_URL}/login`, {
+        username,
+        password,
+      });
+
+      if (response.data.isSuccess) {
+        const { access_token, refresh_token } = response.data.result;
+        // 토큰 저장
+        localStorage.setItem("access_token", access_token);
+        localStorage.setItem("refresh_token", refresh_token);
+        // 워크스페이스로 이동
         navigate("/workspace");
       } else {
-        if (login.rejected.match(resultAction)) {
-          console.error(resultAction.payload || "Login failed");
-        }
+        console.error("Login failed: ", response.data.message);
       }
     } catch (err) {
-      console.error(err);
+      console.error("Login failed: ", err);
     }
   };
 
