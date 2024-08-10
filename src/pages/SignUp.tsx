@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const SignUp: React.FC = () => {
   const [username, setUsername] = useState("");
-  const [isUsernameUnique, setIsUsernameUnique] = useState(false);
+  const [isUsernameSuccess, setIsUsernameSuccess] = useState(false);
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   const [usernameError, setUsernameError] = useState("");
   const [password, setPassword] = useState("");
@@ -17,28 +17,35 @@ const SignUp: React.FC = () => {
     specialChar: false,
   });
   const [isPasswordMatch, setIsPasswordMatch] = useState(false);
+  const navigate = useNavigate();
 
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUsername(e.target.value);
-    setIsUsernameUnique(false);
+    setIsUsernameSuccess(false);
     setUsernameError("");
   };
 
+  const apiClient = axios.create({
+    baseURL: `${process.env.REACT_APP_BASE_URL}`,
+  });
+
   const handleCheckUsername = async () => {
+    console.log(username);
+
     setIsCheckingUsername(true);
     try {
-      const response = await axios.get(
-        `/member/check/username?username=${username}`
+      const response = await apiClient.post(
+        `/api/member/check?username=${username}`
       );
-      if (response.data.isUnique) {
-        setIsUsernameUnique(true);
+      if (response.data.isSuccess) {
+        setIsUsernameSuccess(true);
         setUsernameError("");
       } else {
-        setIsUsernameUnique(false);
+        setIsUsernameSuccess(false);
         setUsernameError("아이디가 이미 존재합니다.");
       }
     } catch (error) {
-      setUsernameError("아이디 확인 중 오류가 발생했습니다.");
+      setUsernameError("아이디가 이미 존재합니다.");
     } finally {
       setIsCheckingUsername(false);
     }
@@ -70,8 +77,28 @@ const SignUp: React.FC = () => {
     setPasswordCriteria(criteria);
   };
 
+  const handleSignUp = async () => {
+    try {
+      const response = await axios.post(
+        "http://ec2-3-34-211-45.ap-northeast-2.compute.amazonaws.com:8080/api/member/signup",
+        {
+          username,
+          password,
+        }
+      );
+      if (response.data.isSuccess) {
+        alert("회원가입에 성공했습니다.");
+        navigate("/"); // 회원가입 성공 후 로그인 페이지로 이동
+      } else {
+        alert("회원가입에 실패했습니다.");
+      }
+    } catch (error) {
+      alert("회원가입 중 오류가 발생했습니다.");
+    }
+  };
+
   const isFormValid =
-    isUsernameUnique &&
+    isUsernameSuccess &&
     Object.values(passwordCriteria).every(Boolean) &&
     isPasswordMatch;
 
@@ -110,7 +137,7 @@ const SignUp: React.FC = () => {
             {usernameError && (
               <p className="text-xs text-white">{usernameError}</p>
             )}
-            {isUsernameUnique && (
+            {isUsernameSuccess && (
               <p className="text-xs text-white">아이디를 사용할 수 있습니다.</p>
             )}
           </div>
@@ -128,32 +155,49 @@ const SignUp: React.FC = () => {
                 <div className="flex flex-col">
                   <div className="flex gap-5">
                     <p
-                      className={`text-xs ${passwordCriteria.lowercase ? "text-green" : "text-orange"}`}
+                      className={`text-xs ${
+                        passwordCriteria.lowercase
+                          ? "text-green"
+                          : "text-orange"
+                      }`}
                     >
                       소문자 포함{passwordCriteria.lowercase ? "✅" : "❌"}
                     </p>
                     <p
-                      className={`text-xs ${passwordCriteria.uppercase ? "text-green" : "text-orange"}`}
+                      className={`text-xs ${
+                        passwordCriteria.uppercase
+                          ? "text-green"
+                          : "text-orange"
+                      }`}
                     >
                       대문자 포함{passwordCriteria.uppercase ? "✅" : "❌"}
                     </p>
                     <p
-                      className={`text-xs ${passwordCriteria.number ? "text-green" : "text-orange"}`}
+                      className={`text-xs ${
+                        passwordCriteria.number ? "text-green" : "text-orange"
+                      }`}
                     >
                       숫자 포함{passwordCriteria.number ? "✅" : "❌"}
                     </p>
                   </div>
                   <div className="flex gap-5">
                     <p
-                      className={`text-xs ${passwordCriteria.length ? "text-green" : "text-orange"}`}
+                      className={`text-xs ${
+                        passwordCriteria.length ? "text-green" : "text-orange"
+                      }`}
                     >
                       8자 이상 20자 이하{passwordCriteria.length ? "✅" : "❌"}
                     </p>
 
                     <p
-                      className={`text-xs ${passwordCriteria.specialChar ? "text-green" : "text-orange"}`}
+                      className={`text-xs ${
+                        passwordCriteria.specialChar
+                          ? "text-green"
+                          : "text-orange"
+                      }`}
                     >
-                      특수문자 포함{passwordCriteria.specialChar ? "✅" : "❌"}
+                      특수문자 포함
+                      {passwordCriteria.specialChar ? "✅" : "❌"}
                     </p>
                   </div>
                 </div>
@@ -184,6 +228,7 @@ const SignUp: React.FC = () => {
               className={`h-12 w-full rounded-lg bg-black p-2 text-white drop-shadow-lg ${
                 !isFormValid && "opacity-50 cursor-not-allowed"
               }`}
+              onClick={handleSignUp}
               disabled={!isFormValid}
             >
               회원가입

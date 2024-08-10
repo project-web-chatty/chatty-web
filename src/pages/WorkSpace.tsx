@@ -1,7 +1,7 @@
 import ReactModal from "react-modal";
 import GroupMenu from "../components/GroupIcon";
 import { useState } from "react";
-import WorkspaceForm from "../components/WorkspaceForm";
+import WorkspaceForm from "../components/WorkspaceFormModal";
 
 interface WorkSpaceProps {
   name?: string;
