@@ -25,13 +25,17 @@ const SignUp: React.FC = () => {
     setUsernameError("");
   };
 
+  const apiClient = axios.create({
+    baseURL: `${process.env.REACT_APP_BASE_URL}`,
+  });
+
   const handleCheckUsername = async () => {
     console.log(username);
 
     setIsCheckingUsername(true);
     try {
-      const response = await axios.post(
-        `http://ec2-3-34-211-45.ap-northeast-2.compute.amazonaws.com:8080/api/member/check?username=${username}`
+      const response = await apiClient.post(
+        `/api/member/check?username=${username}`
       );
       if (response.data.isSuccess) {
         setIsUsernameSuccess(true);

@@ -6,9 +6,9 @@ import logo_google from "../assets/logo/logo_google.png";
 import logo_github from "../assets/logo/logo_github.png";
 import { RootState, AppDispatch } from "../store/store";
 import { login } from "../features/authSlice";
-
-const API_URL =
-  "http://ec2-3-34-211-45.ap-northeast-2.compute.amazonaws.com:8080/api/auth";
+const apiClient = axios.create({
+  baseURL: `${process.env.REACT_APP_BASE_URL}`,
+});
 
 const Login: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>(); // AppDispatch 타입 지정
@@ -20,7 +20,7 @@ const Login: React.FC = () => {
 
   const handleLogin = async () => {
     try {
-      const response = await axios.post(`${API_URL}/login`, {
+      const response = await apiClient.post(`/api/auth/login`, {
         username,
         password,
       });
@@ -40,9 +40,9 @@ const Login: React.FC = () => {
     }
   };
 
-  const handleSocialLogin = (provider: string) => {
-    window.location.href = `${API_URL}/auth/${provider}`;
-  };
+  // const handleSocialLogin = (provider: string) => {
+  //   window.location.href = `${API_URL}/auth/${provider}`;
+  // };
 
   return (
     <div className="flex h-screen items-center justify-center p-20">
@@ -112,10 +112,10 @@ const Login: React.FC = () => {
             <hr className="my-8 h-px w-full max-w-96 border-white" />
           </div>
           <div className="flex gap-20">
-            <button onClick={() => handleSocialLogin("google")}>
+            <button>
               <img src={logo_google} className="h-10 w-10" />
             </button>
-            <button onClick={() => handleSocialLogin("github")}>
+            <button>
               <img src={logo_github} className="h-10 w-10" />
             </button>
           </div>
