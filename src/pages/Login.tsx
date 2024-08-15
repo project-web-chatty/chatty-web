@@ -6,6 +6,8 @@ import logo_google from "../assets/logo/logo_google.png";
 import logo_github from "../assets/logo/logo_github.png";
 import { RootState, AppDispatch } from "../store/store";
 import { login } from "../features/authSlice";
+
+// 공통 서버 주소
 const apiClient = axios.create({
   baseURL: `${process.env.REACT_APP_BASE_URL}`,
 });
@@ -17,32 +19,39 @@ const Login: React.FC = () => {
 
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+  const [wrongAccess, setWrongAccess] = useState<boolean>(false);
 
+  // 로그인 기능 로직
   const handleLogin = async () => {
     try {
       const response = await apiClient.post(`/api/auth/login`, {
         username,
         password,
       });
+      console.log(response.data);
 
       if (response.data.isSuccess) {
-        const { access_token, refresh_token } = response.data.result;
+        const { accessToken, refreshToken } = response.data.result;
         // 토큰 저장
-        localStorage.setItem("access_token", access_token);
-        localStorage.setItem("refresh_token", refresh_token);
+        sessionStorage.setItem("accessToken", accessToken);
+        document.cookie = `refreshToken=${refreshToken}; Secure;`;
         // 워크스페이스로 이동
         navigate("/workspace");
       } else {
-        console.error("Login failed: ", response.data.message);
+        console.error("Login failed1: ", response.data.message);
       }
     } catch (err) {
-      console.error("Login failed: ", err);
+      console.error("Login failed2: ", err);
+      setWrongAccess(true);
     }
   };
 
-  // const handleSocialLogin = (provider: string) => {
-  //   window.location.href = `${API_URL}/auth/${provider}`;
-  // };
+  // Enter 키 눌렀을 때 로그인 시도
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleLogin();
+    }
+  };
 
   return (
     <div className="flex h-screen items-center justify-center p-20">
@@ -62,9 +71,10 @@ const Login: React.FC = () => {
                 className="h-12 w-full rounded-md border-2 border-white bg-body px-5 text-white focus:outline-none"
                 placeholder="아이디를 입력해주세요."
                 value={username}
-                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                  setUsername(e.target.value)
-                }
+                onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                  setUsername(e.target.value);
+                  setWrongAccess(false);
+                }}
               />
             </div>
           </div>
@@ -76,13 +86,20 @@ const Login: React.FC = () => {
                 className="h-12 w-full rounded-md border-2 border-white bg-body px-5 text-white focus:outline-none"
                 placeholder="비밀번호를 입력해주세요."
                 value={password}
-                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                  setPassword(e.target.value)
-                }
+                onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                  setPassword(e.target.value);
+                  setWrongAccess(false);
+                }}
+                onKeyDown={handleKeyDown}
               />
             </div>
           </div>
-          <div className="mt-2 flex items-center">
+          <div className="mt-2 flex flex-col gap-2">
+            {username && password && wrongAccess && (
+              <p className="text-xs text-orange">
+                없는 아이디거나 비밀번호가 일치하지 않습니다.
+              </p>
+            )}
             <a href="#" className="text-xs text-purple">
               비밀번호를 잊어버렸나요?
             </a>
