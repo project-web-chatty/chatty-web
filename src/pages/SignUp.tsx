@@ -29,7 +29,13 @@ const SignUp: React.FC = () => {
     baseURL: `${process.env.REACT_APP_BASE_URL}`,
   });
 
+  // 아이디 유효성 검사
   const handleCheckUsername = async () => {
+    // username 길이가 6자 이상인지 확인
+    if (username.length < 6) {
+      setUsernameError("6자 이상 입력해 주세요.");
+      return;
+    }
     console.log(username);
 
     setIsCheckingUsername(true);
@@ -51,6 +57,7 @@ const SignUp: React.FC = () => {
     }
   };
 
+  // 비밀변경 설정
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newPassword = e.target.value;
     setPassword(newPassword);
@@ -58,6 +65,7 @@ const SignUp: React.FC = () => {
     setIsPasswordMatch(newPassword === confirmPassword);
   };
 
+  // 비밀번호 확인
   const handleConfirmPasswordChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -66,6 +74,7 @@ const SignUp: React.FC = () => {
     setIsPasswordMatch(newConfirmPassword === password);
   };
 
+  // 비밀번호 유효성 검사
   const validatePassword = (password: string) => {
     const criteria = {
       length: password.length >= 8 && password.length <= 20,
@@ -77,15 +86,13 @@ const SignUp: React.FC = () => {
     setPasswordCriteria(criteria);
   };
 
+  // 회원가입 완료
   const handleSignUp = async () => {
     try {
-      const response = await axios.post(
-        "http://ec2-3-34-211-45.ap-northeast-2.compute.amazonaws.com:8080/api/member/signup",
-        {
-          username,
-          password,
-        }
-      );
+      const response = await apiClient.post("/api/member/signup", {
+        username,
+        password,
+      });
       if (response.data.isSuccess) {
         alert("회원가입에 성공했습니다.");
         navigate("/"); // 회원가입 성공 후 로그인 페이지로 이동
@@ -97,6 +104,7 @@ const SignUp: React.FC = () => {
     }
   };
 
+  // 모든 조건 만족시
   const isFormValid =
     isUsernameSuccess &&
     Object.values(passwordCriteria).every(Boolean) &&
@@ -124,6 +132,7 @@ const SignUp: React.FC = () => {
                 placeholder="아이디를 입력해주세요."
                 value={username}
                 onChange={handleUsernameChange}
+                minLength={6}
               />
               <button
                 type="button"
@@ -135,7 +144,7 @@ const SignUp: React.FC = () => {
               </button>
             </div>
             {usernameError && (
-              <p className="text-xs text-white">{usernameError}</p>
+              <p className="text-xs text-orange">{usernameError}</p>
             )}
             {isUsernameSuccess && (
               <p className="text-xs text-white">아이디를 사용할 수 있습니다.</p>
