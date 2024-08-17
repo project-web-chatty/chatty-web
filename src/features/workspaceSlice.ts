@@ -1,11 +1,9 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import logo_coupang from "../assets/logo/logo_coupang.png";
-import logo_toss from "../assets/logo/logo_toss.png";
 
 interface Workspace {
-  icon: string;
-  text: string;
-  route?: string;
+  profileImg: string;
+  name: string;
+  id: number;
 }
 
 interface WorkspaceState {
@@ -13,10 +11,7 @@ interface WorkspaceState {
 }
 
 const initialState: WorkspaceState = {
-  workspaces: [
-    { icon: logo_coupang, text: "쿠팡", route: "/workspace/coupang" },
-    { icon: logo_toss, text: "토스팀", route: "/workspace/toss" },
-  ],
+  workspaces: [],
 };
 
 const workspaceSlice = createSlice({

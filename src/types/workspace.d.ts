@@ -21,4 +21,5 @@ export interface Channel {
 export interface RequestCreateWorkspaceParams {
   name: string;
   description: string;
+  file: string;
 }
