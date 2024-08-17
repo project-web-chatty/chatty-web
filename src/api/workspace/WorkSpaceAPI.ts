@@ -1,13 +1,12 @@
 import { Get, Post } from "../util/apiUtils";
+import { ResponseWorkspace } from "../../types/workspace";
 import { ResponseUserInfo } from "../../types/user";
-import {
-  RequestCreateWorkspaceParams,
-  ResponseWorkspace,
-} from "../../types/workspace";
+import { channel } from "./../../types/channel.d";
 
 const postOption = {
   headers: {
     Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+    "Content-Type": "multipart/form-data",
   },
 };
 
@@ -36,12 +35,35 @@ const workSpaceService = {
   },
 
   /**
+   * API to get user's workspaces information
+   * @param
+   * @returns
+   */
+  getWorkspaceChannels: async (workspaceId: number) => {
+    const response = await Get<channel[]>(
+      `/workspace/${workspaceId}/channels`,
+      postOption
+    );
+
+    return response.data.result;
+  },
+
+  /**
    * API to create a new workspace
    * @param
    * @returns
    */
-  createWorkspace: async (data: RequestCreateWorkspaceParams) => {
-    const response = await Post("/workspace", data, postOption);
+  createWorkspace: async (data: {
+    name: string;
+    description: string;
+    file: string;
+  }) => {
+    const formData = new FormData();
+    formData.append("name", data.name);
+    formData.append("description", data.description);
+    if (!!data.file) formData.append("file", "");
+
+    const response = await Post("/workspace", formData, postOption);
     return response;
   },
 
@@ -67,5 +89,10 @@ const workSpaceService = {
   },
 };
 
-export const { getUserInfo, getWorkspaceInfo, createWorkspace, joinWorkspace } =
-  workSpaceService;
+export const {
+  getUserInfo,
+  getWorkspaceInfo,
+  getWorkspaceChannels,
+  createWorkspace,
+  joinWorkspace,
+} = workSpaceService;
