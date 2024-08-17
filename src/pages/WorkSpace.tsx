@@ -1,14 +1,32 @@
 import ReactModal from "react-modal";
+import { useDispatch } from "react-redux";
+import { useEffect, useState } from "react";
+
 import GroupMenu from "../components/GroupIcon";
-import { useState } from "react";
+import { ResponseUserInfo } from "../types/user";
+import { addWorkspace } from "../features/workspaceSlice";
 import WorkspaceForm from "../components/WorkspaceFormModal";
+import { getUserInfo, joinWorkspace } from "../api/workspace/WorkSpaceAPI";
 
 interface WorkSpaceProps {
   name?: string;
 }
 
-const WorkSpace: React.FC<WorkSpaceProps> = ({ name = "이동현" }) => {
+const WorkSpace: React.FC<WorkSpaceProps> = ({ name: string }) => {
+  const dispatch = useDispatch();
   const [isOpen, setIsOpen] = useState(false);
+  const [user, setUser]: [ResponseUserInfo | undefined, any] = useState();
+  const [code, setCode]: [string, any] = useState("");
+
+  useEffect(() => {
+    getUserInfo().then((res) => {
+      setUser(() => res);
+      res.myWorkspaces.forEach((workspace: any) =>
+        dispatch(addWorkspace(workspace))
+      );
+    });
+  }, []);
+
   const openModal = () => {
     setIsOpen(true);
   };
@@ -29,12 +47,20 @@ const WorkSpace: React.FC<WorkSpaceProps> = ({ name = "이동현" }) => {
     },
   };
 
+  const changeCode = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCode(e.target.value);
+  };
+
+  const join = () => {
+    joinWorkspace(code);
+  };
+
   return (
     <div className="h-screen flex items-center justify-center">
       <div className="flex w-4/5 h-full p-20 flex-col items-center justify-center">
         <h1 className="h-10 mb-5">
           <span className="hidden text-3xl font-bold text-white md:inline">
-            {name} 님의&nbsp;
+            {user?.username} 님의&nbsp;
           </span>
           <span className="text-3xl font-bold text-orange">워크 스페이스</span>
         </h1>
@@ -54,10 +80,13 @@ const WorkSpace: React.FC<WorkSpaceProps> = ({ name = "이동현" }) => {
               type="text"
               className="h-10 w-full focus:outline-none"
               placeholder="https://webChatty/~"
+              value={code}
+              onChange={changeCode}
             />
             <button
               type="button"
               className="min-w-20 rounded-md bg-black p-1 text-white hover:bg-opacity-80 drop-shadow-lg"
+              onClick={join}
             >
               참여
             </button>
