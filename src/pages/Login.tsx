@@ -22,7 +22,11 @@ const Login: React.FC = () => {
   };
 
   const handleLogin = () => {
-    loginApi(loginInfo).then(async (res) => res && navigate("/workspace"));
+    loginApi(loginInfo).then(async (res) => {
+      if (res && !!localStorage.getItem("accessToken")) {
+        return navigate("/workspace");
+      }
+    });
   };
 
   // const handleSocialLogin = (provider: string) => {
