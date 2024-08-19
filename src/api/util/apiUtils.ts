@@ -1,10 +1,30 @@
-import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import { CommonResponse } from "../../types/common";
 
-export const api = axios.create({
+export const api: AxiosInstance = axios.create({
   baseURL: `${process.env.REACT_APP_API_URL}`,
+  timeout: 1000,
   // withCredentials: true,
 });
+
+api.interceptors.request.use(
+  (config) => {
+    const accessToken = localStorage.getItem("accessToken");
+
+    try {
+      if (accessToken) {
+        config.headers["Authorization"] = `Bearer ${accessToken}`;
+      }
+      return config;
+    } catch (err) {
+      console.error("[_axios.interceptors.request] config : " + err);
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 /**
  * Utility for axios GET method

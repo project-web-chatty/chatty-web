@@ -3,13 +3,6 @@ import { ResponseWorkspace } from "../../types/workspace";
 import { ResponseUserInfo } from "../../types/user";
 import { channel } from "./../../types/channel.d";
 
-const postOption = {
-  headers: {
-    Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-    "Content-Type": "multipart/form-data",
-  },
-};
-
 const workSpaceService = {
   /**
    * API to get detailed user information"
@@ -17,7 +10,7 @@ const workSpaceService = {
    * @returns
    */
   getUserInfo: async () => {
-    const response = await Get<ResponseUserInfo>("/me", postOption);
+    const response = await Get<ResponseUserInfo>("/me");
 
     return response.data.result;
   },
@@ -28,10 +21,7 @@ const workSpaceService = {
    * @returns
    */
   getWorkspaceInfo: async (id: number) => {
-    const response = await Get<ResponseWorkspace>(
-      `/workspace/${id}`,
-      postOption
-    );
+    const response = await Get<ResponseWorkspace>(`/workspace/${id}`);
   },
 
   /**
@@ -40,10 +30,7 @@ const workSpaceService = {
    * @returns
    */
   getWorkspaceChannels: async (workspaceId: number) => {
-    const response = await Get<channel[]>(
-      `/workspace/${workspaceId}/channels`,
-      postOption
-    );
+    const response = await Get<channel[]>(`/workspace/${workspaceId}/channels`);
 
     return response.data.result;
   },
@@ -63,7 +50,7 @@ const workSpaceService = {
     formData.append("description", data.description);
     if (!!data.file) formData.append("file", "");
 
-    const response = await Post("/workspace", formData, postOption);
+    const response = await Post("/workspace", formData);
     return response;
   },
 
@@ -73,7 +60,7 @@ const workSpaceService = {
    * @returns
    */
   joinWorkspace: async (code: string) => {
-    const response = await Post(`/workspace/join/${code}`, "", postOption);
+    const response = await Post(`/workspace/join/${code}`, "");
 
     if (response.data.isSuccess) {
       return response;
