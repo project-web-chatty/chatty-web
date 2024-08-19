@@ -50,7 +50,7 @@ function Home() {
     getWorkspaceChannels(4).then((res) => {
       setChannels(() => res);
     });
-  });
+  }, []);
 
   const openWorkspaceModal = () => setIsWorkspaceModalOpen(true);
   const closeWorkspaceModal = () => setIsWorkspaceModalOpen(false);
