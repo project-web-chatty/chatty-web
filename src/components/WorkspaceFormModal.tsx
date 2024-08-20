@@ -1,8 +1,9 @@
 import React, { useState } from "react";
+import { useDispatch } from "react-redux";
 import icon_upload from "../assets/icon/icon_upload.png";
 import icon_close from "../assets/icon/icon_close.png";
-import { useDispatch } from "react-redux";
 import { addWorkspace } from "../features/workspaceSlice";
+import { createWorkspace } from "../api/workspace/WorkSpaceAPI";
 
 interface WorkspaceFormProps {
   closeModal: () => void;
@@ -42,12 +43,21 @@ const WorkspaceForm: React.FC<WorkspaceFormProps> = ({ closeModal }) => {
   const handleConfirmSubmit = () => {
     if (workspaceName && workspaceDescription) {
       const newWorkspace = {
-        icon: workspaceIcon,
-        text: workspaceName,
-        route: `/workspace/${workspaceName}`,
+        profileImg: workspaceIcon,
+        name: workspaceName,
+        id: 0,
       };
-      dispatch(addWorkspace(newWorkspace));
-      closeModal();
+
+      createWorkspace({
+        name: workspaceName,
+        description: workspaceDescription,
+        file: "",
+      }).then((res) => {
+        if (res.data.isSuccess) {
+          dispatch(addWorkspace(newWorkspace));
+          closeModal();
+        }
+      });
     }
   };
 
@@ -108,10 +118,11 @@ const WorkspaceForm: React.FC<WorkspaceFormProps> = ({ closeModal }) => {
             <button
               type="button"
               className={`min-w-20 rounded-md bg-black p-1 text-white pr-3 pl-3 hover:bg-opacity-80 drop-shadow-lg  ${
-                !workspaceName && "opacity-50 cursor-not-allowed"
+                (!workspaceName || !workspaceDescription) &&
+                "opacity-50 cursor-not-allowed"
               }`}
               onClick={handleFormSubmit}
-              disabled={!workspaceName}
+              disabled={!workspaceName || !workspaceDescription}
             >
               생성 하기
             </button>

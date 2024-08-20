@@ -26,7 +26,7 @@ const SignUp: React.FC = () => {
   };
 
   const apiClient = axios.create({
-    baseURL: `${process.env.REACT_APP_BASE_URL}`,
+    baseURL: `${process.env.REACT_APP_API_URL}`,
   });
 
   const handleCheckUsername = async () => {
@@ -35,7 +35,7 @@ const SignUp: React.FC = () => {
     setIsCheckingUsername(true);
     try {
       const response = await apiClient.post(
-        `/api/member/check?username=${username}`
+        `/member/check?username=${username}`
       );
       if (response.data.isSuccess) {
         setIsUsernameSuccess(true);

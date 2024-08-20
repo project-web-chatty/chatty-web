@@ -1,43 +1,32 @@
 import React, { useState, ChangeEvent } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
 import logo_google from "../assets/logo/logo_google.png";
 import logo_github from "../assets/logo/logo_github.png";
 import { RootState, AppDispatch } from "../store/store";
-import { login } from "../features/authSlice";
-const apiClient = axios.create({
-  baseURL: `${process.env.REACT_APP_BASE_URL}`,
-});
+import { RequestLoginParams } from "../types/auth";
+import { loginApi } from "../api/auth";
 
 const Login: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>(); // AppDispatch 타입 지정
   const navigate = useNavigate();
   const { loading, error } = useSelector((state: RootState) => state.auth);
 
-  const [username, setUsername] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
+  const [loginInfo, setLoginInfo] = useState<RequestLoginParams>({
+    username: "",
+    password: "",
+  });
 
-  const handleLogin = async () => {
-    try {
-      const response = await apiClient.post(`/api/auth/login`, {
-        username,
-        password,
-      });
+  const onChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setLoginInfo((cur) => ({ ...cur, [e.target.name]: e.target.value }));
+  };
 
-      if (response.data.isSuccess) {
-        const { access_token, refresh_token } = response.data.result;
-        // 토큰 저장
-        localStorage.setItem("access_token", access_token);
-        localStorage.setItem("refresh_token", refresh_token);
-        // 워크스페이스로 이동
-        navigate("/workspace");
-      } else {
-        console.error("Login failed: ", response.data.message);
+  const handleLogin = () => {
+    loginApi(loginInfo).then(async (res) => {
+      if (res && !!localStorage.getItem("accessToken")) {
+        return navigate("/workspace");
       }
-    } catch (err) {
-      console.error("Login failed: ", err);
-    }
+    });
   };
 
   // const handleSocialLogin = (provider: string) => {
@@ -59,12 +48,11 @@ const Login: React.FC = () => {
             <div className="mt-2 flex items-center">
               <input
                 type="text"
+                name="username"
                 className="h-12 w-full rounded-md border-2 border-white bg-body px-5 text-white focus:outline-none"
                 placeholder="아이디를 입력해주세요."
-                value={username}
-                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                  setUsername(e.target.value)
-                }
+                value={loginInfo.username}
+                onChange={onChange}
               />
             </div>
           </div>
@@ -72,13 +60,12 @@ const Login: React.FC = () => {
             <p className="text-l font-bold text-white">PASSWORD</p>
             <div className="mt-2 flex items-center">
               <input
+                name="password"
                 type="password"
                 className="h-12 w-full rounded-md border-2 border-white bg-body px-5 text-white focus:outline-none"
                 placeholder="비밀번호를 입력해주세요."
-                value={password}
-                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                  setPassword(e.target.value)
-                }
+                value={loginInfo.password}
+                onChange={onChange}
               />
             </div>
           </div>

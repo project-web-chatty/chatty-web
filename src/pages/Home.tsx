@@ -15,6 +15,8 @@ import CopyLogo from "../assets/icon/icon_copy.png";
 import ChattingContainer from "../components/ChattingContainer";
 import Modal from "../components/Modal"; //기본 Modal 컴포넌트
 import MenuModal from "../components/MenuModal"; //Channel Name 우측 화살표를 누르면 나오는 메뉴 Options
+import { channel } from "../types/channel";
+import { getWorkspaceChannels } from "../api/workspace/WorkSpaceAPI";
 
 //Message 인터페이스 정의
 interface Message {
@@ -43,15 +45,12 @@ function Home() {
       profile: People,
       chatting: `안녕하세요 프론트엔드 팀원 여러분,
                   다음 주 수요일에 예정된 정기 회의 관련 공지드립니다.
-
                   이번 회의에서는 각 부서별로 발표가 있을 예정입니다. 주요
                   내용은 아래와 같습니다:
-
                   1. 운영팀: 최근 배달 효율성 개선 프로젝트 진행 상황 보고
                   2. 마케팅팀: 신규 프로모션 캠페인 계획 및 기대 효과 발표
                   3. 기술팀: 앱 업데이트 및 새로운 기능 소개
                   4. 고객지원팀: 고객 만족도 조사 결과 및 개선 방안 발표
-
                   우리 프론트엔드 팀에서는 새로운 사용자 인터페이스 개선 사항과
                   현재 진행 중인 프로젝트의 진척도를 공유할 예정입니다. 각
                   팀원은 본인의 작업 부분에 대해 간단한 업데이트를 준비해
@@ -119,6 +118,13 @@ function Home() {
   ]);
 
   const [isWorkspaceModalOpen, setIsWorkspaceModalOpen] = useState(false);
+  const [channels, setChannels] = useState<channel[] | null>(null);
+
+  useEffect(() => {
+    getWorkspaceChannels(4).then((res) => {
+      setChannels(() => res);
+    });
+  }, []);
 
   const openWorkspaceModal = () => setIsWorkspaceModalOpen(true);
   const closeWorkspaceModal = () => setIsWorkspaceModalOpen(false);
@@ -163,6 +169,7 @@ function Home() {
     if (input.trim()) {
       setMessages((prevMessages) => {
         //이전 메세지 배열이 비어 있는지 확인하고, 비어 있지 않으면 마지막 메세지의 id를 가져옴
+
         const newId =
           prevMessages.length > 0
             ? prevMessages[prevMessages.length - 1].id + 1
@@ -248,20 +255,12 @@ function Home() {
           </div>
           <div className="border border-white w-full mt-5"></div>
           <div style={{ overflowY: "auto", height: "calc(100vh - 120px)" }}>
-            <div className="flex my-5 justify-between">
-              <p className="text-sm font-bold text-white"># announce</p>
-              <p className="text-xs text-gray">5 new messaages</p>
-            </div>
-            <div className="flex my-5 justify-between">
-              <p className="text-sm font-bold text-white"># backend</p>
-              <p className="text-xs text-gray">3 new messaages</p>
-            </div>
-            <div className="flex my-5 justify-between">
-              <p className="text-sm font-bold text-white"># frontend</p>
-            </div>
-            <div className="flex my-5 justify-between">
-              <p className="text-sm font-bold text-white"># schedule</p>
-            </div>
+            {channels?.map((channel, i) => (
+              <div className="flex my-5 justify-between">
+                <p className="text-sm font-bold text-white"># {channel.name}</p>
+                {/* <p className="text-xs text-gray">5 new messaages</p> */}
+              </div>
+            ))}
           </div>
           <div className="flex">
             <img className="w-5 h-5" src={PlusCircle} alt="" />
