@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { stat } from "fs";
 
 interface Workspace {
   profileImg: string;
@@ -19,10 +20,11 @@ const workspaceSlice = createSlice({
   initialState,
   reducers: {
     addWorkspace: (state, action: PayloadAction<Workspace>) => {
-      state.workspaces.push(action.payload);
+      state.workspaces = [...state.workspaces, action.payload];
     },
+    reset: () => initialState,
   },
 });
 
-export const { addWorkspace } = workspaceSlice.actions;
+export const { addWorkspace, reset } = workspaceSlice.actions;
 export default workspaceSlice.reducer;
