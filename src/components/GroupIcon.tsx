@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useCallback } from "react";
 import { useSelector } from "react-redux";
@@ -38,8 +38,6 @@ const GroupMenu: React.FC<GroupMenuProps> = ({ openModal }) => {
     (state: RootState) => state.workspace.workspaces
   );
 
-  const [workspaceList, setWorkspaceList] = useState();
-
   const openWorkSpace = useCallback(
     (workspaceId?: number) => {
       if (!!workspaceId) {
@@ -53,7 +51,7 @@ const GroupMenu: React.FC<GroupMenuProps> = ({ openModal }) => {
     <div className="flex flex-wrap justify-evenly items-center h-full w-full max-w-[600px] gap-5 pt-8 pb-8 ">
       {workspaces.map((workspace, index) => (
         <GroupIcon
-          key={index}
+          key={workspace.id}
           profileImg={workspace.profileImg ?? basic_img}
           name={workspace.name}
           id={workspace.id}
