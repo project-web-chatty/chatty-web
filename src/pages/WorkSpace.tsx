@@ -4,11 +4,7 @@ import { useEffect, useState } from "react";
 
 import GroupMenu from "../components/GroupIcon";
 import { ResponseUserInfo } from "../types/user";
-import {
-  addWorkspace,
-  displayWorkspaceList,
-  reset,
-} from "../features/workspaceSlice";
+import { addWorkspace, reset } from "../features/workspaceSlice";
 import WorkspaceForm from "../components/WorkspaceFormModal";
 import { getUserInfo, joinWorkspace } from "../api/workspace/WorkSpaceAPI";
 import { RootState } from "../store/store";
@@ -22,9 +18,6 @@ const WorkSpace: React.FC<WorkSpaceProps> = ({ name: string }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser]: [ResponseUserInfo | undefined, any] = useState();
   const [code, setCode]: [string, any] = useState("");
-  const workspaces = useSelector(
-    (state: RootState) => state.workspace.workspaces
-  );
 
   useEffect(() => {
     getUserInfo().then((res) => {
