@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import HomeLogo from "../assets/icon/icon_home.png";
 import MessageLogo from "../assets/icon/icon_message.png";
 import UserLogo from "../assets/icon/icon_user.png";
@@ -37,6 +37,8 @@ interface Member {
 }
 
 function Home() {
+  const { state } = useLocation();
+  const { workspaceId } = state;
   //messages 상태 변수와 setMessages 함수 정의
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -121,10 +123,12 @@ function Home() {
   const [channels, setChannels] = useState<channel[] | null>(null);
 
   useEffect(() => {
-    getWorkspaceChannels(4).then((res) => {
-      setChannels(() => res);
-    });
-  }, []);
+    if (!!workspaceId) {
+      getWorkspaceChannels(workspaceId).then((res) => {
+        setChannels(() => res);
+      });
+    }
+  }, [workspaceId]);
 
   const openWorkspaceModal = () => setIsWorkspaceModalOpen(true);
   const closeWorkspaceModal = () => setIsWorkspaceModalOpen(false);

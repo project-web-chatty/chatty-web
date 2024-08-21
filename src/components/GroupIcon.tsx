@@ -41,7 +41,7 @@ const GroupMenu: React.FC<GroupMenuProps> = ({ openModal }) => {
   const openWorkSpace = useCallback(
     (workspaceId?: number) => {
       if (!!workspaceId) {
-        navigate(`/home`);
+        navigate(`/home`, { state: { workspaceId: workspaceId } });
       }
     },
     [navigate]
