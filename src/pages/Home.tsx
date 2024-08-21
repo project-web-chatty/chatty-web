@@ -17,6 +17,7 @@ import Modal from "../components/Modal"; //기본 Modal 컴포넌트
 import MenuModal from "../components/MenuModal"; //Channel Name 우측 화살표를 누르면 나오는 메뉴 Options
 import { channel } from "../types/channel";
 import { getWorkspaceChannels } from "../api/workspace/WorkSpaceAPI";
+import { Client, IMessage } from "@stomp/stompjs";
 
 //Message 인터페이스 정의
 interface Message {
@@ -39,6 +40,71 @@ interface Member {
 function Home() {
   const { state } = useLocation();
   const { workspaceId } = state;
+  const [channelId, setChannelId] = useState<number | null>(null); // 우측 채팅내역을 갖는 채널의 id
+
+  /**
+   * Chat 통신
+   */
+  const [client, setClient] = useState<Client | null>(null);
+  const [content, setContent] = useState<string[]>([]);
+
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+
+    const stompClient = new Client({
+      brokerURL: `${process.env.REACT_APP_SOCKET_URL}`,
+      connectHeaders: {
+        Authorization: `Bearer ${token}`,
+      },
+      reconnectDelay: 5000,
+      debug: (str) => {
+        console.log(str);
+      },
+    });
+
+    stompClient.onConnect = (frame) => {
+      console.log("Connected: " + frame);
+
+      stompClient.subscribe(
+        `/topic/channel.${channelId}`,
+        (message: IMessage) => {
+          if (message.body) {
+            setContent((prevMessages) => [...prevMessages, message.body]);
+          }
+          console.log(message);
+        }
+      );
+    };
+
+    stompClient.onDisconnect = () => {
+      console.log("Disconnected");
+    };
+
+    stompClient.activate();
+    setClient(stompClient);
+
+    return () => {
+      stompClient.deactivate();
+    };
+  }, [channelId]);
+
+  const sendMessage = (message: string) => {
+    if (client && client.connected) {
+      // TODO : 메세지 형식 변경됨에 따라 추가수정 필요(아래 형식은 임시로 사용한다고 함)
+      const chatMessage = {
+        channelId,
+        senderNickname: "", // TODO : 유저닉네임 추가
+        senderUsername: "", // TODO : 유저네임 추가
+        content: message,
+      };
+
+      client.publish({
+        destination: `/pub/chat.message.${channelId}`,
+        body: JSON.stringify(chatMessage),
+      });
+    }
+  };
+
   //messages 상태 변수와 setMessages 함수 정의
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -126,6 +192,7 @@ function Home() {
     if (!!workspaceId) {
       getWorkspaceChannels(workspaceId).then((res) => {
         setChannels(() => res);
+        setChannelId(() => res[0].id);
       });
     }
   }, [workspaceId]);
@@ -319,7 +386,7 @@ function Home() {
             onCompositionStart={handleCompositionStart}
             onCompositionEnd={handleCompositionEnd}
           />
-          <button onClick={handleSendMessage}>
+          <button onClick={() => sendMessage(input)}>
             <img id="submit" className="w-5 h-5" src={SendMessage} alt="" />
           </button>
         </div>
