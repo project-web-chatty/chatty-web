@@ -12,7 +12,8 @@ interface WorkspaceFormProps {
 const WorkspaceForm: React.FC<WorkspaceFormProps> = ({ closeModal }) => {
   const [workspaceName, setWorkspaceName] = useState<string>("");
   const [workspaceDescription, setWorkspaceDescription] = useState<string>("");
-  const [workspaceIcon, setWorkspaceIcon] = useState<string>(icon_upload);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [workspaceIcon, setWorkspaceIcon] = useState<string>("");
   const [isPreviewOpen, setIsPreviewOpen] = useState<boolean>(false);
   const dispatch = useDispatch();
 
@@ -26,10 +27,12 @@ const WorkspaceForm: React.FC<WorkspaceFormProps> = ({ closeModal }) => {
 
   const handleIconChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
+      setUploadFile(e.target.files[0]);
+
       const reader = new FileReader();
       reader.onload = (event) => {
         if (event.target && event.target.result) {
-          setWorkspaceIcon(event.target.result as string);
+          setWorkspaceIcon(event.target.result as BinaryType);
         }
       };
       reader.readAsDataURL(e.target.files[0]);
@@ -51,7 +54,7 @@ const WorkspaceForm: React.FC<WorkspaceFormProps> = ({ closeModal }) => {
       createWorkspace({
         name: workspaceName,
         description: workspaceDescription,
-        file: "",
+        file: uploadFile,
       }).then((res) => {
         if (res.data.isSuccess) {
           dispatch(addWorkspace(newWorkspace));
@@ -108,11 +111,13 @@ const WorkspaceForm: React.FC<WorkspaceFormProps> = ({ closeModal }) => {
                 id="icon-upload"
               />
               <label htmlFor="icon-upload">
-                <img
-                  className="w-6 cursor-pointer"
-                  alt="업로드아이콘"
-                  src={workspaceIcon}
-                />
+                <div className="w-6 h-6 flex items-center justify-center overflow-hidden">
+                  <img
+                    className="w-auto cursor-pointer"
+                    alt="업로드아이콘"
+                    src={uploadFile ? workspaceIcon : icon_upload}
+                  />
+                </div>
               </label>
             </div>
             <button

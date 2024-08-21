@@ -43,14 +43,18 @@ const workSpaceService = {
   createWorkspace: async (data: {
     name: string;
     description: string;
-    file: string;
+    file: File | null;
   }) => {
     const formData = new FormData();
     formData.append("name", data.name);
     formData.append("description", data.description);
-    if (!!data.file) formData.append("file", "");
+    if (!!data.file) formData.append("file", data.file);
 
-    const response = await Post("/workspace", formData);
+    const response = await Post("/workspace", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
     return response;
   },
 
