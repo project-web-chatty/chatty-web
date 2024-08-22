@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import HomeLogo from "../assets/icon/icon_home.png";
 import MessageLogo from "../assets/icon/icon_message.png";
 import UserLogo from "../assets/icon/icon_profile-person.png";
@@ -6,11 +6,29 @@ import ProfileImg from "../assets/icon/icon_profile-person.png";
 import ReactModal from "react-modal";
 import ButtonModal from "../components/ButtonModal";
 import PasswordEditingModal from "../components/PasswordEditingModal";
+import axios from "axios";
+import { useNavigate } from "react-router";
+
+const apiClient = axios.create({
+  baseURL: `${process.env.REACT_APP_BASE_URL}`,
+});
 
 function UserSetting() {
   const [isOpen, setIsOpen] = useState(false);
   const [modalSetting, setModalSetting] = useState("");
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [oldPassword, setOldPassword] = useState<string | undefined>();
+  const [newPassword, setNewPassword] = useState<string | undefined>();
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // 로그인 상태 확인
+    const accessToken = sessionStorage.getItem("accessToken");
+    if (!accessToken) {
+      navigate("/"); // 로그인 페이지로 리디렉션
+    }
+  }, [navigate]);
 
   const openModal = (setting: string) => {
     setModalSetting(setting);
@@ -22,16 +40,67 @@ function UserSetting() {
     setModalSetting("");
   };
 
-  const logoutHandler = () => {
+  // 로그아웃
+  const logoutHandler = async () => {
     console.log("Logging out...");
-    // 로그아웃 로직을 여기에 추가
-    closeModal();
+
+    const accessToken = sessionStorage.getItem("accessToken");
+    try {
+      const response = await apiClient.post(
+        `/api/auth/logout`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      if (response.data.isSuccess) {
+        // Access token 삭제
+        sessionStorage.removeItem("accessToken");
+
+        // 쿠키에서 refreshToken 제거
+        document.cookie =
+          "refreshToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; Secure;";
+
+        // 로그아웃 후 리디렉션
+        navigate("/");
+      } else {
+        console.error("Logout failed: ", response.data.message);
+      }
+    } catch (err) {
+      console.error("Logout failed: ", err);
+    }
   };
 
-  const deleteAccountHandler = () => {
+  // 계정 삭제
+  const deleteAccountHandler = async () => {
     console.log("Deleting account...");
-    // 계정 삭제 로직을 여기에 추가
-    closeModal();
+    const accessToken = sessionStorage.getItem("accessToken");
+    try {
+      const response = await apiClient.delete(`/api/me`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`, // 토큰을 헤더에 추가
+        },
+      });
+
+      if (response.data.isSuccess) {
+        // Access token 삭제
+        sessionStorage.removeItem("access_token");
+
+        // 쿠키에서 refreshToken 제거
+        document.cookie =
+          "refreshToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; Secure;";
+
+        // 로그아웃 후 리디렉션
+        navigate("/");
+      } else {
+        console.error("Logout failed: ", response.data.message);
+      }
+    } catch (err) {
+      console.error("Logout failed: ", err);
+    }
   };
 
   const openPasswordModal = () => {
@@ -42,10 +111,16 @@ function UserSetting() {
     setIsPasswordModalOpen(false);
   };
 
-  const passwordChangeHandler = () => {
+  // 비밀번호 변경
+  const passwordChangeHandler = async () => {
     console.log("Changing password...");
-    // 비밀번호 변경 로직을 여기에 추가
-    closePasswordModal();
+    try {
+      const response = await apiClient.post(`/api/auth/password`, {
+        oldPassword,
+        newPassword,
+      });
+      closePasswordModal();
+    } catch {}
   };
 
   const customStyles = {
