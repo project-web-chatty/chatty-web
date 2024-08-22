@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import HomeLogo from "../assets/icon/icon_home.png";
 import MessageLogo from "../assets/icon/icon_message.png";
 import UserLogo from "../assets/icon/icon_user.png";
@@ -16,16 +16,27 @@ import ChattingContainer from "../components/ChattingContainer";
 import Modal from "../components/Modal"; //기본 Modal 컴포넌트
 import MenuModal from "../components/MenuModal"; //Channel Name 우측 화살표를 누르면 나오는 메뉴 Options
 import { channel } from "../types/channel";
-import { getWorkspaceChannels } from "../api/workspace/WorkSpaceAPI";
+import basic_img from "../assets/image/basic_img.jpg";
+import {
+  deleteWorkspace,
+  getUserInfo,
+  getWorkspaceChannels,
+  getWorkspaceInfo,
+} from "../api/workspace/WorkSpaceAPI";
+import { Client, IMessage } from "@stomp/stompjs";
+import { AppDispatch, RootState } from "../store/store";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchWorkspaceInfo } from "../features/workspaceSlice";
+import { fetchUserInfo } from "../features/userSlice";
 
-//Message 인터페이스 정의
+// TODO : Response타입 정해지면 수정 필요. (현재는 임시)
 interface Message {
-  id: number;
-  nickname: string;
-  profile: string;
-  chatting: string;
-  time: string;
-  isMe: boolean;
+  id: number | null;
+  channelId: number;
+  senderNickname: string;
+  senderUsername: string;
+  content: string;
+  regDate: any;
 }
 
 //Member 인터페이스 정의
@@ -37,57 +48,92 @@ interface Member {
 }
 
 function Home() {
-  //messages 상태 변수와 setMessages 함수 정의
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 1,
-      nickname: "양준석(팀장)",
-      profile: People,
-      chatting: `안녕하세요 프론트엔드 팀원 여러분,
-                  다음 주 수요일에 예정된 정기 회의 관련 공지드립니다.
-                  이번 회의에서는 각 부서별로 발표가 있을 예정입니다. 주요
-                  내용은 아래와 같습니다:
-                  1. 운영팀: 최근 배달 효율성 개선 프로젝트 진행 상황 보고
-                  2. 마케팅팀: 신규 프로모션 캠페인 계획 및 기대 효과 발표
-                  3. 기술팀: 앱 업데이트 및 새로운 기능 소개
-                  4. 고객지원팀: 고객 만족도 조사 결과 및 개선 방안 발표
-                  우리 프론트엔드 팀에서는 새로운 사용자 인터페이스 개선 사항과
-                  현재 진행 중인 프로젝트의 진척도를 공유할 예정입니다. 각
-                  팀원은 본인의 작업 부분에 대해 간단한 업데이트를 준비해
-                  주세요.`,
-      time: "17:06",
-      isMe: false,
-    },
-    {
-      id: 2,
-      nickname: "아무개",
-      profile: People,
-      chatting: `신규 개발 중인 개인정보 수정 탭의 사이드 탭의 UI 개발 을 맡고
-                  있는 해당 팀원 분들은 저에게 진척 사항 공유 부탁드립니다~ 발표
-                  자료에 포함시킬 예정입니다.`,
-      time: "17:07",
-      isMe: true,
-    },
-    {
-      id: 3,
-      nickname: "김민수",
-      profile: People,
-      chatting: `저랑 이지현 팀원이 개발 중에 있습니다! 진척 상황 노션에
-                  정리하여 곧 공유드리겠습니다!`,
-      time: "17:08",
-      isMe: false,
-    },
-    {
-      id: 4,
-      nickname: "아무게",
-      profile: People,
-      chatting: `신규 개발 중인 개인정보 수정 탭의 사이드 탭의 UI 개발 을 맡고
-                  있는 해당 팀원 분들은 저에게 진척 사항 공유 부탁드립니다~ 발표
-                  자료에 포함시킬 예정입니다.`,
-      time: "17:09",
-      isMe: true,
-    },
-  ]);
+  const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
+  const { state } = useLocation();
+  const { workspaceId } = state;
+  const [channelId, setChannelId] = useState<number | null>(null); // 우측 채팅내역을 갖는 채널의 id
+
+  const user = useSelector((state: RootState) => state.user); // 유저 상태 조회
+  const workspace = useSelector((state: RootState) => state.workspace);
+
+  useEffect(() => {
+    if (!user.id) getUserInfo().then((res) => dispatch(fetchUserInfo()));
+
+    if (!!workspaceId) {
+      getWorkspaceInfo(workspaceId).then((res) => {
+        dispatch(fetchWorkspaceInfo(workspaceId));
+      });
+
+      getWorkspaceChannels(workspaceId).then((res) => {
+        setChannels(() => res);
+        setChannelId(() => res[0].id);
+      });
+    }
+  }, []);
+
+  /**
+   * Chat 통신
+   */
+  const [client, setClient] = useState<Client | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+
+    const stompClient = new Client({
+      brokerURL: `${process.env.REACT_APP_SOCKET_URL}`,
+      connectHeaders: {
+        Authorization: `Bearer ${token}`,
+      },
+      reconnectDelay: 5000,
+    });
+
+    stompClient.onConnect = (frame) => {
+      stompClient.subscribe(
+        `/topic/channel.${channelId}`,
+        (message: IMessage) => {
+          if (message.body) {
+            setMessages((prevMessages: Message[]) => [
+              ...prevMessages,
+              JSON.parse(message.body),
+            ]);
+          }
+          console.log(message);
+        }
+      );
+    };
+
+    stompClient.onDisconnect = () => {
+      console.log("Disconnected");
+    };
+
+    stompClient.activate();
+    setClient(stompClient);
+
+    return () => {
+      stompClient.deactivate();
+    };
+  }, [channelId]);
+
+  const sendMessage = (message: string) => {
+    if (client && client.connected) {
+      // TODO : 메세지 형식 변경됨에 따라 추가수정 필요(아래 형식은 임시로 사용한다고 함)
+      const chatMessage = {
+        channelId,
+        senderNickname: user.nickname,
+        senderUsername: user.username,
+        content: message,
+      };
+
+      client.publish({
+        destination: `/pub/chat.message.${channelId}`,
+        body: JSON.stringify(chatMessage),
+      });
+
+      setInput("");
+    }
+  };
 
   //멤버 관리하기 모달
   const [members, setMembers] = useState<Member[]>([
@@ -119,12 +165,6 @@ function Home() {
 
   const [isWorkspaceModalOpen, setIsWorkspaceModalOpen] = useState(false);
   const [channels, setChannels] = useState<channel[] | null>(null);
-
-  useEffect(() => {
-    getWorkspaceChannels(4).then((res) => {
-      setChannels(() => res);
-    });
-  }, []);
 
   const openWorkspaceModal = () => setIsWorkspaceModalOpen(true);
   const closeWorkspaceModal = () => setIsWorkspaceModalOpen(false);
@@ -159,45 +199,17 @@ function Home() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  //키다운 핸들러(Enter 키 입력 시 메세지 전송)
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey && !isComposing && !!input.length) {
+      e.preventDefault();
+      sendMessage(input);
+    }
+  };
+
   //입력값 변경 핸들러
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
-  };
-
-  //메세지 전송 핸들러
-  const handleSendMessage = () => {
-    if (input.trim()) {
-      setMessages((prevMessages) => {
-        //이전 메세지 배열이 비어 있는지 확인하고, 비어 있지 않으면 마지막 메세지의 id를 가져옴
-
-        const newId =
-          prevMessages.length > 0
-            ? prevMessages[prevMessages.length - 1].id + 1
-            : 1;
-        return [
-          ...prevMessages,
-          {
-            id: newId,
-            nickname: "아무게",
-            profile: People,
-            chatting: input,
-            time: new Date().toLocaleTimeString(),
-            isMe: true,
-          },
-        ];
-      });
-      setInput("");
-    }
-  };
-
-  //키다운 핸들러(Enter 키 입력 시 메세지 전송)
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      if (!isComposing) {
-        handleSendMessage();
-      }
-    }
   };
 
   //입력 구성 시작 핸들러
@@ -213,19 +225,22 @@ function Home() {
     setInput(e.currentTarget.value);
   };
 
-  //키업 핸들러 (Enter 키 입력 시 메세지 전송)
-  const handleKeyUp = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey && !isComposing) {
-      e.preventDefault();
-      handleSendMessage();
-    }
+  const onClickDeleteButton = () => {
+    // TODO : USER가 오너인지, 멤버인지 권한 확인하는 코드 추가
+    //   deleteWorkspace(workspaceId).then((res) => {
+    //     if (res) {
+    //       navigate("/workspace");
+    //     }
+    //   });
   };
 
   return (
     <div className="flex">
       {/* 맨 좌측 탭 */}
       <div className="w-24 min-h-screen flex flex-col justify-between bg-outerTab">
-        <div className="mx-auto mt-6 bg-white w-10 h-10 rounded-md"></div>
+        <div className="mx-auto mt-6 bg-white w-10 h-10 rounded-md  overflow-hidden">
+          <img src={workspace.profileImg ?? basic_img} alt="" />
+        </div>
         <div className="mx-auto mb-6">
           <div
             className="bg-white inset-x-0 bottom-0 rounded-xl mb-6"
@@ -247,7 +262,7 @@ function Home() {
           <div className="flex justify-between items-center">
             <p className="text-xl font-bold text-white">Channel Name</p>
             <img
-              className="inset-x-0 bottom-0 w-5 h-2"
+              className="inset-x-0 bottom-0 w-5 h-2 cursor-pointer"
               src={ArrowDown}
               alt=""
               onClick={toggleMenu}
@@ -256,7 +271,7 @@ function Home() {
           <div className="border border-white w-full mt-5"></div>
           <div style={{ overflowY: "auto", height: "calc(100vh - 120px)" }}>
             {channels?.map((channel, i) => (
-              <div className="flex my-5 justify-between">
+              <div className="flex my-5 justify-between" key={channel.id}>
                 <p className="text-sm font-bold text-white"># {channel.name}</p>
                 {/* <p className="text-xs text-gray">5 new messaages</p> */}
               </div>
@@ -282,18 +297,20 @@ function Home() {
           className="px-2 overflow-y-auto"
           style={{ height: "calc(100vh - 172px)" }}
         >
-          {messages.map(({ id, nickname, profile, chatting, time, isMe }) => (
-            <>
-              <ChattingContainer
-                key={id}
-                nickname={nickname}
-                profile={profile}
-                chatting={chatting}
-                time={time}
-                isMe={isMe}
-              />
-            </>
-          ))}
+          {messages.map(
+            ({ id, senderUsername, senderNickname, content, regDate }) => (
+              <>
+                <ChattingContainer // TODO : 추후 response타입 변경에 따라 수정 필요.
+                  key={id}
+                  nickname={senderNickname}
+                  profile=""
+                  chatting={content}
+                  time={regDate}
+                  isMe={user.nickname === senderNickname}
+                />
+              </>
+            )
+          )}
           <div ref={chatEndRef}></div>
         </div>
         <div className="w-full h-12 bg-white flex items-center justify-between mt-6 rounded-lg px-3">
@@ -310,12 +327,12 @@ function Home() {
             placeholder="메세지를 입력해주세요."
             value={input}
             onChange={handleInputChange}
-            onKeyDown={handleKeyDown}
-            onKeyUp={handleKeyUp}
+            onKeyDown={handleKeyPress}
+            onKeyUp={handleKeyPress}
             onCompositionStart={handleCompositionStart}
             onCompositionEnd={handleCompositionEnd}
           />
-          <button onClick={handleSendMessage}>
+          <button onClick={() => sendMessage(input)}>
             <img id="submit" className="w-5 h-5" src={SendMessage} alt="" />
           </button>
         </div>
@@ -464,7 +481,10 @@ function Home() {
               <button className="w-24 bg-white text-sm text-black py-1 px-5 rounded-md border-2 border-black">
                 취소
               </button>
-              <button className="w-24 bg-orange text-sm text-white py-1 px-5 rounded-md">
+              <button
+                className="w-24 bg-orange text-sm text-white py-1 px-5 rounded-md"
+                onClick={onClickDeleteButton}
+              >
                 삭제하기
               </button>
             </div>

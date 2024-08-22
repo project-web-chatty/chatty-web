@@ -2,14 +2,14 @@ import { CommonResponse } from "./common.d";
 import { ResponseWorkspace } from "./workspace.d";
 
 export interface ResponseUserInfo extends CommonResponse {
-  createdDate: string;
-  lastModifiedDate: string;
   id: number;
   username: string;
   email?: string;
   role: string;
-  profile_img?: string;
+  profileImg?: string;
   nickname: string;
   introduction: string;
   myWorkspaces: [ResponseWorkspace];
+  createdDate: string;
+  lastModifiedDate: string;
 }
