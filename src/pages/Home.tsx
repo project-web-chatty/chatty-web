@@ -403,7 +403,11 @@ function Home() {
         {selectedModal &&
           {
             "새 채널 만들기": (
-              <CreateChannel title={selectedModal} closeModal={closeModal} />
+              <CreateChannel
+                workspaceId={workspaceId}
+                title={selectedModal}
+                closeModal={closeModal}
+              />
             ),
             "워크스페이스 정보 수정": (
               <EditWorkspaceInfo

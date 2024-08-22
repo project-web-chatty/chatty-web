@@ -1,9 +1,32 @@
+import { useState } from "react";
+import { createChannel } from "../../api/workspace/WorkSpaceAPI";
+
 interface CreateChannelProps {
   closeModal: () => void;
   title: string | null;
+  workspaceId: number;
 }
 
-const CreateChannel: React.FC<CreateChannelProps> = ({ closeModal, title }) => {
+const CreateChannel: React.FC<CreateChannelProps> = ({
+  closeModal,
+  title,
+  workspaceId,
+}) => {
+  const [channelName, setChannelName] = useState<string>("");
+
+  const onChangeChannelName = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setChannelName(e.target.value);
+  };
+
+  const submit = () => {
+    createChannel(workspaceId, channelName).then((res) => {
+      if (res.data.isSuccess) {
+        closeModal();
+        window.location.reload();
+      }
+    });
+  };
+
   return (
     <>
       <div
@@ -29,9 +52,14 @@ const CreateChannel: React.FC<CreateChannelProps> = ({ closeModal, title }) => {
               type="text"
               className="border-2 border-black w-full p-2 rounded-md text-sm focus:outline-none mt-2"
               placeholder="이름을 정해주세요."
+              value={channelName}
+              onChange={onChangeChannelName}
             />
             <div className="flex justify-end mt-5 items-center">
-              <button className="bg-purple text-sm text-white py-1 px-5 rounded-md">
+              <button
+                className="bg-purple text-sm text-white py-1 px-5 rounded-md"
+                onClick={submit}
+              >
                 생성하기
               </button>
             </div>

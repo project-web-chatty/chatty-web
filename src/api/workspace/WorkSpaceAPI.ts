@@ -61,6 +61,20 @@ const workSpaceService = {
   },
 
   /**
+   * API for adding a new channel in the workspace
+   * @param workspaceId
+   * @param channelName
+   * @returns
+   */
+  createChannel: async (workspaceId: number, channelName: string) => {
+    const response = await Post(`/workspace/${workspaceId}/channels`, {
+      name: channelName,
+    });
+
+    return response;
+  },
+
+  /**
    * API to join another user's workspace
    * @param
    * @returns
@@ -101,6 +115,7 @@ export const {
   getUserInfo,
   getWorkspaceInfo,
   getWorkspaceChannels,
+  createChannel,
   createWorkspace,
   joinWorkspace,
   deleteWorkspace,
