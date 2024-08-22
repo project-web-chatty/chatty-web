@@ -10,8 +10,6 @@ import People from "../assets/icon/icon_people.png";
 import Clip from "../assets/icon/icon_clipicon.png";
 import SendMessage from "../assets/icon/icon_sendMessage.png";
 import Upload from "../assets/icon/icon_upload.png";
-import LinkLogo from "../assets/icon/icon_link.png";
-import CopyLogo from "../assets/icon/icon_copy.png";
 import ChattingContainer from "../components/ChattingContainer";
 import Modal from "../components/Modal"; //기본 Modal 컴포넌트
 import MenuModal from "../components/MenuModal"; //Channel Name 우측 화살표를 누르면 나오는 메뉴 Options
@@ -28,6 +26,13 @@ import { AppDispatch, RootState } from "../store/store";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchWorkspaceInfo } from "../features/workspaceSlice";
 import { fetchUserInfo } from "../features/userSlice";
+import ReactModal from "react-modal";
+import ManageMembers from "../components/Modals/ManageMemberModal";
+import CreateChannel from "../components/Modals/CreateChannelModal";
+import LeaveWorkspace from "../components/Modals/LeaveWorkspaceModal";
+import DeleteWorkspace from "../components/Modals/DeleteWorkspaceModal";
+import EditWorkspaceInfo from "../components/Modals/EditWorkspaceInfoModal";
+import CreateInvitationLink from "../components/Modals/CreateInvitationLinkModal";
 
 // TODO : Response타입 정해지면 수정 필요. (현재는 임시)
 interface Message {
@@ -53,6 +58,7 @@ function Home() {
   const { state } = useLocation();
   const { workspaceId } = state;
   const [channelId, setChannelId] = useState<number | null>(null); // 우측 채팅내역을 갖는 채널의 id
+  const [workspaceDescription, setWorkspaceDescription] = useState<string>("");
 
   const user = useSelector((state: RootState) => state.user); // 유저 상태 조회
   const workspace = useSelector((state: RootState) => state.workspace);
@@ -72,6 +78,20 @@ function Home() {
     }
   }, []);
 
+  const customStyles = {
+    overlay: {
+      backgroundColor: "rgba(0,0,0,0.5)",
+    },
+    content: {
+      padding: 0,
+      top: "50%",
+      left: "50%",
+      right: "auto",
+      bottom: "auto",
+      marginRight: "-50%",
+      transform: "translate(-50%, -50%)",
+    },
+  };
   /**
    * Chat 통신
    */
@@ -373,124 +393,45 @@ function Home() {
         onClose={toggleMenu}
         onMenuItemClick={handleMenuItemClick}
       />
-      {/* 각 Menu Options를 눌렀을 때 나오는 Modal. */}
-      <Modal
+      <ReactModal
+        appElement={document.getElementById("root") as HTMLElement}
         isOpen={!!selectedModal}
-        onClose={closeModal}
-        title={selectedModal}
+        onRequestClose={closeModal}
+        style={customStyles}
       >
-        {/* 메뉴 클릭 시 전달된 항목 이름이 "새 채널 만들기" 일 경우, 즉 "채널 생성" 메뉴를 클릭했을 때. */}
-        {selectedModal === "새 채널 만들기" && (
-          <div className="py-5">
-            <p className="text-sm">채널 이름</p>
-            <input
-              type="text"
-              className="border-2 border-black w-full p-2 rounded-md text-sm focus:outline-none mt-2"
-              placeholder="이름을 정해주세요."
-            />
-            <div className="flex justify-end mt-5 items-center">
-              <button className="bg-purple text-sm text-white py-1 px-5 rounded-md">
-                생성하기
-              </button>
-            </div>
-          </div>
-        )}
-        {/* 메뉴 클릭 시 전달된 항목 이름이 "워크스페이스 이름 변경하기" 일 경우, 즉 "서버 이름 변경" 메뉴를 클릭했을 때. */}
-        {selectedModal === "워크스페이스 이름 변경하기" && (
-          <div className="py-5">
-            <p className="text-sm">서버 이름</p>
-            <input
-              type="text"
-              className="border-2 border-black w-full p-2 rounded-md text-sm focus:outline-none mt-2"
-              placeholder="이름을 정해주세요."
-            />
-            <div className="flex justify-end mt-5 items-center">
-              <button className="bg-purple text-sm text-white py-1 px-5 rounded-md">
-                변경하기
-              </button>
-            </div>
-          </div>
-        )}
-        {/* 메뉴 클릭 시 전달된 항목 이름이 "멤버 관리하기" 일 경우, 즉 "멤버 관리" 메뉴를 클릭했을 때. */}
-        {selectedModal === "멤버 관리하기" && (
-          <div>
-            <div className="p-5 flex items-center bg-lightGray rounded-lg mt-3">
-              <div className="flex flex-wrap gap-4">
-                {members.map((member) => (
-                  <div key={member.id} className="flex items-center ml-2">
-                    <img
-                      className="w-5 h-5 rounded-xl"
-                      src={member.profile}
-                      alt=""
-                    />
-                    <p className="text-xs mx-3">{member.nickname}</p>
-                    <button className="text-gray-500 hover:text-gray-700 mr-4">
-                      &times;
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="flex justify-end mt-5 items-center">
-              <button className="bg-purple text-sm text-white py-1 px-5 rounded-md">
-                변경하기
-              </button>
-            </div>
-          </div>
-        )}
-        {/* 메뉴 클릭 시 전달된 항목 이름이 "초대링크 생성하기" 일 경우, 즉 "초대 링크" 메뉴를 클릭했을 때. */}
-        {selectedModal === "초대링크 생성하기" && (
-          <div className="py-5">
-            <p className="text-sm">초대링크</p>
-            <div className="flex w-full items-center mt-2">
-              <div className="flex border-2 border-black w-full p-2 rounded-md items-center mr-3">
-                <input
-                  type="text"
-                  className="w-full text-sm focus:outline-none"
-                  placeholder="초대링크를 입력해주세요."
-                />
-                <img className="w-3 h-3" src={LinkLogo} alt="" />
-              </div>
-              <img className="w-3 h-3" src={CopyLogo} alt="" />
-            </div>
-          </div>
-        )}
-        {/* 메뉴 클릭 시 전달된 항목 이름이 "워크스페이스 나가기" 일 경우, 즉 "서버 나가기" 메뉴를 클릭했을 때. */}
-        {selectedModal === "워크스페이스 나가기" && (
-          <div className="pt-10">
-            <div className="flex justify-center">
-              <p className="text-sm font-bold">정말로 나가시겠어요?</p>
-            </div>
-            <div className="flex justify-between mt-10 items-center">
-              <button className="w-24 bg-white text-sm text-black py-1 px-5 rounded-md border-2 border-black">
-                취소
-              </button>
-              <button className="w-24 bg-orange text-sm text-white py-1 px-5 rounded-md">
-                나가기
-              </button>
-            </div>
-          </div>
-        )}
-        {/* 메뉴 클릭 시 전달된 항목 이름이 "워크스페이스 삭제하기" 일 경우, 즉 "서버 삭제" 메뉴를 클릭했을 때. */}
-        {selectedModal === "워크스페이스 삭제하기" && (
-          <div className="pt-10">
-            <div className="flex justify-center">
-              <p className="text-sm font-bold">정말로 삭제하시겠어요?</p>
-            </div>
-            <div className="flex justify-between mt-10 items-center">
-              <button className="w-24 bg-white text-sm text-black py-1 px-5 rounded-md border-2 border-black">
-                취소
-              </button>
-              <button
-                className="w-24 bg-orange text-sm text-white py-1 px-5 rounded-md"
-                onClick={onClickDeleteButton}
-              >
-                삭제하기
-              </button>
-            </div>
-          </div>
-        )}
-      </Modal>
+        {/* 각 Menu Options를 눌렀을 때 나오는 Modal. */}
+        {selectedModal &&
+          {
+            "새 채널 만들기": (
+              <CreateChannel title={selectedModal} closeModal={closeModal} />
+            ),
+            "워크스페이스 정보 수정": (
+              <EditWorkspaceInfo
+                title={selectedModal}
+                closeModal={closeModal}
+              />
+            ),
+            "멤버 관리하기": (
+              <ManageMembers
+                title={selectedModal}
+                closeModal={closeModal}
+                members={members}
+              />
+            ),
+            "초대링크 생성하기": (
+              <CreateInvitationLink
+                title={selectedModal}
+                closeModal={closeModal}
+              />
+            ),
+            "워크스페이스 나가기": (
+              <LeaveWorkspace title={selectedModal} closeModal={closeModal} />
+            ),
+            "워크스페이스 삭제": (
+              <DeleteWorkspace title={selectedModal} closeModal={closeModal} />
+            ),
+          }[selectedModal]}
+      </ReactModal>
     </div>
   );
 }
