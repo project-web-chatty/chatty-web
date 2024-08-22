@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import HomeLogo from "../assets/icon/icon_home.png";
 import MessageLogo from "../assets/icon/icon_message.png";
 import UserLogo from "../assets/icon/icon_user.png";
@@ -16,8 +16,16 @@ import ChattingContainer from "../components/ChattingContainer";
 import Modal from "../components/Modal"; //기본 Modal 컴포넌트
 import MenuModal from "../components/MenuModal"; //Channel Name 우측 화살표를 누르면 나오는 메뉴 Options
 import { channel } from "../types/channel";
-import { getWorkspaceChannels } from "../api/workspace/WorkSpaceAPI";
+import basic_img from "../assets/image/basic_img.jpg";
+import {
+  deleteWorkspace,
+  getWorkspaceChannels,
+  getWorkspaceInfo,
+} from "../api/workspace/WorkSpaceAPI";
 import { Client, IMessage } from "@stomp/stompjs";
+import { AppDispatch, RootState } from "../store/store";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchWorkspaceInfo } from "../features/workspaceSlice";
 
 //Message 인터페이스 정의
 interface Message {
@@ -38,15 +46,33 @@ interface Member {
 }
 
 function Home() {
+  const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
   const { state } = useLocation();
   const { workspaceId } = state;
   const [channelId, setChannelId] = useState<number | null>(null); // 우측 채팅내역을 갖는 채널의 id
+
+  const user = useSelector((state: RootState) => state.user); // 유저 상태 조회
+  const workspace = useSelector((state: RootState) => state.workspace);
 
   /**
    * Chat 통신
    */
   const [client, setClient] = useState<Client | null>(null);
   const [content, setContent] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!!workspaceId) {
+      getWorkspaceInfo(workspaceId).then((res) => {
+        dispatch(fetchWorkspaceInfo(workspaceId));
+      });
+
+      getWorkspaceChannels(workspaceId).then((res) => {
+        setChannels(() => res);
+        setChannelId(() => res[0].id);
+      });
+    }
+  }, []);
 
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
@@ -188,15 +214,6 @@ function Home() {
   const [isWorkspaceModalOpen, setIsWorkspaceModalOpen] = useState(false);
   const [channels, setChannels] = useState<channel[] | null>(null);
 
-  useEffect(() => {
-    if (!!workspaceId) {
-      getWorkspaceChannels(workspaceId).then((res) => {
-        setChannels(() => res);
-        setChannelId(() => res[0].id);
-      });
-    }
-  }, [workspaceId]);
-
   const openWorkspaceModal = () => setIsWorkspaceModalOpen(true);
   const closeWorkspaceModal = () => setIsWorkspaceModalOpen(false);
 
@@ -292,11 +309,22 @@ function Home() {
     }
   };
 
+  const onClickDeleteButton = () => {
+    // TODO : USER가 오너인지, 멤버인지 권한 확인하는 코드 추가
+    //   deleteWorkspace(workspaceId).then((res) => {
+    //     if (res) {
+    //       navigate("/workspace");
+    //     }
+    //   });
+  };
+
   return (
     <div className="flex">
       {/* 맨 좌측 탭 */}
       <div className="w-24 min-h-screen flex flex-col justify-between bg-outerTab">
-        <div className="mx-auto mt-6 bg-white w-10 h-10 rounded-md"></div>
+        <div className="mx-auto mt-6 bg-white w-10 h-10 rounded-md  overflow-hidden">
+          <img src={workspace.profileImg ?? basic_img} alt="" />
+        </div>
         <div className="mx-auto mb-6">
           <div
             className="bg-white inset-x-0 bottom-0 rounded-xl mb-6"
@@ -318,7 +346,7 @@ function Home() {
           <div className="flex justify-between items-center">
             <p className="text-xl font-bold text-white">Channel Name</p>
             <img
-              className="inset-x-0 bottom-0 w-5 h-2"
+              className="inset-x-0 bottom-0 w-5 h-2 cursor-pointer"
               src={ArrowDown}
               alt=""
               onClick={toggleMenu}
@@ -535,7 +563,10 @@ function Home() {
               <button className="w-24 bg-white text-sm text-black py-1 px-5 rounded-md border-2 border-black">
                 취소
               </button>
-              <button className="w-24 bg-orange text-sm text-white py-1 px-5 rounded-md">
+              <button
+                className="w-24 bg-orange text-sm text-white py-1 px-5 rounded-md"
+                onClick={onClickDeleteButton}
+              >
                 삭제하기
               </button>
             </div>

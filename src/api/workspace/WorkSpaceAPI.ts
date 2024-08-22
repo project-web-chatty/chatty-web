@@ -1,4 +1,4 @@
-import { Get, Post } from "../util/apiUtils";
+import { Delete, Get, Post } from "../util/apiUtils";
 import { ResponseWorkspace } from "../../types/workspace";
 import { ResponseUserInfo } from "../../types/user";
 import { channel } from "./../../types/channel.d";
@@ -22,6 +22,8 @@ const workSpaceService = {
    */
   getWorkspaceInfo: async (id: number) => {
     const response = await Get<ResponseWorkspace>(`/workspace/${id}`);
+
+    return response.data.result;
   },
 
   /**
@@ -78,6 +80,21 @@ const workSpaceService = {
       }
     }
   },
+
+  /**
+   * API to delete workspace (Only owner)
+   * @param workspaceId
+   * @returns
+   */
+  deleteWorkspace: async (workspaceId: number) => {
+    const response = await Delete(`/workspace/${workspaceId}`);
+
+    if (response.data.isSuccess) {
+      return response;
+    } else {
+      console.log(response.data.message);
+    }
+  },
 };
 
 export const {
@@ -86,4 +103,5 @@ export const {
   getWorkspaceChannels,
   createWorkspace,
   joinWorkspace,
+  deleteWorkspace,
 } = workSpaceService;
