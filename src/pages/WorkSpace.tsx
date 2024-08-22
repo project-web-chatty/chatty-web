@@ -7,25 +7,28 @@ import { ResponseUserInfo } from "../types/user";
 import { addWorkspace, reset } from "../features/workspaceSlice";
 import WorkspaceForm from "../components/WorkspaceFormModal";
 import { getUserInfo, joinWorkspace } from "../api/workspace/WorkSpaceAPI";
-import { RootState } from "../store/store";
+import { AppDispatch, RootState } from "../store/store";
+import { fetchUserInfo } from "../features/userSlice";
 
 interface WorkSpaceProps {
   name?: string;
 }
 
 const WorkSpace: React.FC<WorkSpaceProps> = ({ name: string }) => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const [isOpen, setIsOpen] = useState(false);
-  const [user, setUser]: [ResponseUserInfo | undefined, any] = useState();
+  const user = useSelector((state: RootState) => state.user); // 유저 상태 조회
   const [code, setCode]: [string, any] = useState("");
 
   useEffect(() => {
     getUserInfo().then((res) => {
-      setUser(() => res);
       dispatch(reset());
-      res.myWorkspaces.forEach((workspace: any) =>
-        dispatch(addWorkspace(workspace))
-      );
+      if (res) {
+        dispatch(fetchUserInfo());
+        res.myWorkspaces.forEach((workspace: any) =>
+          dispatch(addWorkspace(workspace))
+        );
+      }
     });
   }, []);
 

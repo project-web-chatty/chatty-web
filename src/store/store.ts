@@ -1,11 +1,13 @@
 import { configureStore } from "@reduxjs/toolkit";
 import workspaceReducer from "../features/workspaceSlice";
 import authReducer from "../features/authSlice";
+import userReducer from "../features/userSlice";
 
 const store = configureStore({
   reducer: {
     workspace: workspaceReducer,
     auth: authReducer,
+    user: userReducer,
   },
 });
 
