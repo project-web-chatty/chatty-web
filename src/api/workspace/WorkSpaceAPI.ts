@@ -1,3 +1,4 @@
+import { Put } from "./../util/apiUtils";
 import { Delete, Get, Post } from "../util/apiUtils";
 import { ResponseWorkspace } from "../../types/workspace";
 import { ResponseUserInfo } from "../../types/user";
@@ -74,6 +75,34 @@ const workSpaceService = {
     return response;
   },
 
+  updateWorkspaceDescription: async (
+    workspaceId: number,
+    description: string
+  ) => {
+    const response = await Put(`/workspace/${workspaceId}`, {
+      description: description,
+    });
+
+    return response;
+  },
+
+  updateWorkspaceProfileImg: async (workspaceId: number, file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await Post(
+      `/workspace/${workspaceId}/profile-image`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
+    return response;
+  },
+
   /**
    * API to join another user's workspace
    * @param
@@ -119,4 +148,6 @@ export const {
   createWorkspace,
   joinWorkspace,
   deleteWorkspace,
+  updateWorkspaceDescription,
+  updateWorkspaceProfileImg,
 } = workSpaceService;

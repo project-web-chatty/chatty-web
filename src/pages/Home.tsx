@@ -411,6 +411,7 @@ function Home() {
             ),
             "워크스페이스 정보 수정": (
               <EditWorkspaceInfo
+                workspaceId={workspaceId}
                 title={selectedModal}
                 closeModal={closeModal}
               />
