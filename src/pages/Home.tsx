@@ -306,7 +306,7 @@ function Home() {
                   profile=""
                   chatting={content}
                   time={regDate}
-                  isMe=""
+                  isMe={user.nickname === senderNickname}
                 />
               </>
             )
