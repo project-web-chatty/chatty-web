@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 
 import GroupMenu from "../components/GroupIcon";
 import { ResponseUserInfo } from "../types/user";
-import { addWorkspace, reset } from "../features/workspaceSlice";
 import WorkspaceForm from "../components/WorkspaceFormModal";
 import { getUserInfo, joinWorkspace } from "../api/workspace/WorkSpaceAPI";
 import { AppDispatch, RootState } from "../store/store";
@@ -22,12 +21,8 @@ const WorkSpace: React.FC<WorkSpaceProps> = ({ name: string }) => {
 
   useEffect(() => {
     getUserInfo().then((res) => {
-      dispatch(reset());
       if (res) {
         dispatch(fetchUserInfo());
-        res.myWorkspaces.forEach((workspace: any) =>
-          dispatch(addWorkspace(workspace))
-        );
       }
     });
   }, []);

@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import icon_upload from "../assets/icon/icon_upload.png";
 import icon_close from "../assets/icon/icon_close.png";
-import { addWorkspace } from "../features/workspaceSlice";
 import { createWorkspace } from "../api/workspace/WorkSpaceAPI";
+import { useNavigate } from "react-router";
 
 interface WorkspaceFormProps {
   closeModal: () => void;
@@ -15,7 +15,7 @@ const WorkspaceForm: React.FC<WorkspaceFormProps> = ({ closeModal }) => {
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [workspaceIcon, setWorkspaceIcon] = useState<string>("");
   const [isPreviewOpen, setIsPreviewOpen] = useState<boolean>(false);
-  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setWorkspaceName(e.target.value);
@@ -57,8 +57,8 @@ const WorkspaceForm: React.FC<WorkspaceFormProps> = ({ closeModal }) => {
         file: uploadFile,
       }).then((res) => {
         if (res.data.isSuccess) {
-          dispatch(addWorkspace(newWorkspace));
           closeModal();
+          window.location.reload();
         }
       });
     }

@@ -34,9 +34,7 @@ interface GroupMenuProps {
 
 const GroupMenu: React.FC<GroupMenuProps> = ({ openModal }) => {
   const navigate = useNavigate();
-  const workspaces = useSelector(
-    (state: RootState) => state.workspace.workspaces
-  );
+  const workspaces = useSelector((state: RootState) => state.user.myWorkspaces);
 
   const openWorkSpace = useCallback(
     (workspaceId?: number) => {
@@ -49,7 +47,7 @@ const GroupMenu: React.FC<GroupMenuProps> = ({ openModal }) => {
 
   return (
     <div className="flex flex-wrap justify-evenly items-center h-full w-full max-w-[600px] gap-5 pt-8 pb-8 ">
-      {workspaces.map((workspace, index) => (
+      {workspaces?.map((workspace, index) => (
         <GroupIcon
           key={workspace.id}
           profileImg={workspace.profileImg ?? basic_img}

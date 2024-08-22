@@ -5,7 +5,7 @@ export interface ResponseWorkspace {
   lastModifiedDate: string;
   id: number;
   name: string;
-  profile_img?: string;
+  profileImg?: string;
   description: string;
   members: ResponseUserInfo[];
   channels: Channel[];
