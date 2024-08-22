@@ -57,12 +57,6 @@ function Home() {
   const user = useSelector((state: RootState) => state.user); // 유저 상태 조회
   const workspace = useSelector((state: RootState) => state.workspace);
 
-  /**
-   * Chat 통신
-   */
-  const [client, setClient] = useState<Client | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
-
   useEffect(() => {
     if (!user.id) getUserInfo().then((res) => dispatch(fetchUserInfo()));
 
@@ -78,6 +72,12 @@ function Home() {
     }
   }, []);
 
+  /**
+   * Chat 통신
+   */
+  const [client, setClient] = useState<Client | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
 
@@ -87,14 +87,9 @@ function Home() {
         Authorization: `Bearer ${token}`,
       },
       reconnectDelay: 5000,
-      debug: (str) => {
-        console.log(str);
-      },
     });
 
     stompClient.onConnect = (frame) => {
-      console.log("Connected: " + frame);
-
       stompClient.subscribe(
         `/topic/channel.${channelId}`,
         (message: IMessage) => {
@@ -139,8 +134,6 @@ function Home() {
       setInput("");
     }
   };
-
-  //messages 상태 변수와 setMessages 함수 정의
 
   //멤버 관리하기 모달
   const [members, setMembers] = useState<Member[]>([
@@ -206,45 +199,17 @@ function Home() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  //키다운 핸들러(Enter 키 입력 시 메세지 전송)
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey && !isComposing && !!input.length) {
+      e.preventDefault();
+      sendMessage(input);
+    }
+  };
+
   //입력값 변경 핸들러
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
-  };
-
-  //메세지 전송 핸들러
-  const handleSendMessage = () => {
-    if (input.trim()) {
-      setMessages((prevMessages) => {
-        //이전 메세지 배열이 비어 있는지 확인하고, 비어 있지 않으면 마지막 메세지의 id를 가져옴
-
-        const newId =
-          prevMessages.length > 0
-            ? prevMessages[prevMessages.length - 1].id + 1
-            : 1;
-        return [
-          ...prevMessages,
-          {
-            id: newId,
-            nickname: "아무게",
-            profile: People,
-            chatting: input,
-            time: new Date().toLocaleTimeString(),
-            isMe: true,
-          },
-        ];
-      });
-      setInput("");
-    }
-  };
-
-  //키다운 핸들러(Enter 키 입력 시 메세지 전송)
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      if (!isComposing && !!input.length) {
-        sendMessage(input);
-      }
-    }
   };
 
   //입력 구성 시작 핸들러
@@ -258,14 +223,6 @@ function Home() {
   ) => {
     setIsComposing(false);
     setInput(e.currentTarget.value);
-  };
-
-  //키업 핸들러 (Enter 키 입력 시 메세지 전송)
-  const handleKeyUp = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey && !isComposing && !!input.length) {
-      e.preventDefault();
-      sendMessage(input);
-    }
   };
 
   const onClickDeleteButton = () => {
@@ -370,8 +327,8 @@ function Home() {
             placeholder="메세지를 입력해주세요."
             value={input}
             onChange={handleInputChange}
-            onKeyDown={handleKeyDown}
-            onKeyUp={handleKeyUp}
+            onKeyDown={handleKeyPress}
+            onKeyUp={handleKeyPress}
             onCompositionStart={handleCompositionStart}
             onCompositionEnd={handleCompositionEnd}
           />
