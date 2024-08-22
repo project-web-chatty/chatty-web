@@ -19,6 +19,7 @@ import { channel } from "../types/channel";
 import basic_img from "../assets/image/basic_img.jpg";
 import {
   deleteWorkspace,
+  getUserInfo,
   getWorkspaceChannels,
   getWorkspaceInfo,
 } from "../api/workspace/WorkSpaceAPI";
@@ -26,15 +27,16 @@ import { Client, IMessage } from "@stomp/stompjs";
 import { AppDispatch, RootState } from "../store/store";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchWorkspaceInfo } from "../features/workspaceSlice";
+import { fetchUserInfo } from "../features/userSlice";
 
-//Message 인터페이스 정의
+// TODO : Response타입 정해지면 수정 필요. (현재는 임시)
 interface Message {
-  id: number;
-  nickname: string;
-  profile: string;
-  chatting: string;
-  time: string;
-  isMe: boolean;
+  id: number | null;
+  channelId: number;
+  senderNickname: string;
+  senderUsername: string;
+  content: string;
+  regDate: any;
 }
 
 //Member 인터페이스 정의
@@ -59,9 +61,11 @@ function Home() {
    * Chat 통신
    */
   const [client, setClient] = useState<Client | null>(null);
-  const [content, setContent] = useState<string[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
 
   useEffect(() => {
+    if (!user.id) getUserInfo().then((res) => dispatch(fetchUserInfo()));
+
     if (!!workspaceId) {
       getWorkspaceInfo(workspaceId).then((res) => {
         dispatch(fetchWorkspaceInfo(workspaceId));
@@ -95,7 +99,10 @@ function Home() {
         `/topic/channel.${channelId}`,
         (message: IMessage) => {
           if (message.body) {
-            setContent((prevMessages) => [...prevMessages, message.body]);
+            setMessages((prevMessages: Message[]) => [
+              ...prevMessages,
+              JSON.parse(message.body),
+            ]);
           }
           console.log(message);
         }
@@ -119,8 +126,8 @@ function Home() {
       // TODO : 메세지 형식 변경됨에 따라 추가수정 필요(아래 형식은 임시로 사용한다고 함)
       const chatMessage = {
         channelId,
-        senderNickname: "", // TODO : 유저닉네임 추가
-        senderUsername: "", // TODO : 유저네임 추가
+        senderNickname: user.nickname,
+        senderUsername: user.username,
         content: message,
       };
 
@@ -128,60 +135,12 @@ function Home() {
         destination: `/pub/chat.message.${channelId}`,
         body: JSON.stringify(chatMessage),
       });
+
+      setInput("");
     }
   };
 
   //messages 상태 변수와 setMessages 함수 정의
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 1,
-      nickname: "양준석(팀장)",
-      profile: People,
-      chatting: `안녕하세요 프론트엔드 팀원 여러분,
-                  다음 주 수요일에 예정된 정기 회의 관련 공지드립니다.
-                  이번 회의에서는 각 부서별로 발표가 있을 예정입니다. 주요
-                  내용은 아래와 같습니다:
-                  1. 운영팀: 최근 배달 효율성 개선 프로젝트 진행 상황 보고
-                  2. 마케팅팀: 신규 프로모션 캠페인 계획 및 기대 효과 발표
-                  3. 기술팀: 앱 업데이트 및 새로운 기능 소개
-                  4. 고객지원팀: 고객 만족도 조사 결과 및 개선 방안 발표
-                  우리 프론트엔드 팀에서는 새로운 사용자 인터페이스 개선 사항과
-                  현재 진행 중인 프로젝트의 진척도를 공유할 예정입니다. 각
-                  팀원은 본인의 작업 부분에 대해 간단한 업데이트를 준비해
-                  주세요.`,
-      time: "17:06",
-      isMe: false,
-    },
-    {
-      id: 2,
-      nickname: "아무개",
-      profile: People,
-      chatting: `신규 개발 중인 개인정보 수정 탭의 사이드 탭의 UI 개발 을 맡고
-                  있는 해당 팀원 분들은 저에게 진척 사항 공유 부탁드립니다~ 발표
-                  자료에 포함시킬 예정입니다.`,
-      time: "17:07",
-      isMe: true,
-    },
-    {
-      id: 3,
-      nickname: "김민수",
-      profile: People,
-      chatting: `저랑 이지현 팀원이 개발 중에 있습니다! 진척 상황 노션에
-                  정리하여 곧 공유드리겠습니다!`,
-      time: "17:08",
-      isMe: false,
-    },
-    {
-      id: 4,
-      nickname: "아무게",
-      profile: People,
-      chatting: `신규 개발 중인 개인정보 수정 탭의 사이드 탭의 UI 개발 을 맡고
-                  있는 해당 팀원 분들은 저에게 진척 사항 공유 부탁드립니다~ 발표
-                  자료에 포함시킬 예정입니다.`,
-      time: "17:09",
-      isMe: true,
-    },
-  ]);
 
   //멤버 관리하기 모달
   const [members, setMembers] = useState<Member[]>([
@@ -282,8 +241,8 @@ function Home() {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      if (!isComposing) {
-        handleSendMessage();
+      if (!isComposing && !!input.length) {
+        sendMessage(input);
       }
     }
   };
@@ -303,9 +262,9 @@ function Home() {
 
   //키업 핸들러 (Enter 키 입력 시 메세지 전송)
   const handleKeyUp = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey && !isComposing) {
+    if (e.key === "Enter" && !e.shiftKey && !isComposing && !!input.length) {
       e.preventDefault();
-      handleSendMessage();
+      sendMessage(input);
     }
   };
 
@@ -355,7 +314,7 @@ function Home() {
           <div className="border border-white w-full mt-5"></div>
           <div style={{ overflowY: "auto", height: "calc(100vh - 120px)" }}>
             {channels?.map((channel, i) => (
-              <div className="flex my-5 justify-between">
+              <div className="flex my-5 justify-between" key={channel.id}>
                 <p className="text-sm font-bold text-white"># {channel.name}</p>
                 {/* <p className="text-xs text-gray">5 new messaages</p> */}
               </div>
@@ -381,18 +340,20 @@ function Home() {
           className="px-2 overflow-y-auto"
           style={{ height: "calc(100vh - 172px)" }}
         >
-          {messages.map(({ id, nickname, profile, chatting, time, isMe }) => (
-            <>
-              <ChattingContainer
-                key={id}
-                nickname={nickname}
-                profile={profile}
-                chatting={chatting}
-                time={time}
-                isMe={isMe}
-              />
-            </>
-          ))}
+          {messages.map(
+            ({ id, senderUsername, senderNickname, content, regDate }) => (
+              <>
+                <ChattingContainer // TODO : 추후 response타입 변경에 따라 수정 필요.
+                  key={id}
+                  nickname={senderNickname}
+                  profile=""
+                  chatting={content}
+                  time={regDate}
+                  isMe=""
+                />
+              </>
+            )
+          )}
           <div ref={chatEndRef}></div>
         </div>
         <div className="w-full h-12 bg-white flex items-center justify-between mt-6 rounded-lg px-3">
