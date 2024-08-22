@@ -31,7 +31,7 @@ const initialState: WorkspaceState = {
 
 // 비동기 액션 정의
 export const fetchWorkspaceInfo = createAsyncThunk(
-  "user/fetchUserInfo",
+  "workspace/fetchWorkspaceInfo",
   async (workspaceId: number, thunkAPI) => {
     try {
       const data = await getWorkspaceInfo(workspaceId);
