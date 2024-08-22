@@ -1,15 +1,27 @@
 import LinkLogo from "../../assets/icon/icon_link.png";
 import CopyLogo from "../../assets/icon/icon_copy.png";
+import { useEffect, useState } from "react";
+import { getWorkspaceInvitationLink } from "../../api/workspace/WorkSpaceAPI";
 
 interface CreateInvitationLinkProps {
   closeModal: () => void;
   title: string | null;
+  workspaceId: number;
 }
 
 const CreateInvitationLink: React.FC<CreateInvitationLinkProps> = ({
   closeModal,
   title,
+  workspaceId,
 }) => {
+  const [invitationLink, setInvitationLink] = useState<string>("");
+
+  useEffect(() => {
+    getWorkspaceInvitationLink(workspaceId).then(
+      (res: string) => res && setInvitationLink(res)
+    );
+  }, []);
+
   return (
     <>
       <div
@@ -37,6 +49,7 @@ const CreateInvitationLink: React.FC<CreateInvitationLinkProps> = ({
                   type="text"
                   className="w-full text-sm focus:outline-none"
                   placeholder="초대링크를 입력해주세요."
+                  value={invitationLink}
                 />
                 <img className="w-3 h-3" src={LinkLogo} alt="" />
               </div>

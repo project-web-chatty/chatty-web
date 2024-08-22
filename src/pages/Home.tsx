@@ -425,6 +425,7 @@ function Home() {
             ),
             "초대링크 생성하기": (
               <CreateInvitationLink
+                workspaceId={workspaceId}
                 title={selectedModal}
                 closeModal={closeModal}
               />

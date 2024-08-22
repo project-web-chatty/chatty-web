@@ -103,6 +103,12 @@ const workSpaceService = {
     return response;
   },
 
+  getWorkspaceInvitationLink: async (workspaceId: number) => {
+    const response = await Get(`/workspace/${workspaceId}/invite`);
+
+    return response.data.result as string;
+  },
+
   /**
    * API to join another user's workspace
    * @param
@@ -150,4 +156,5 @@ export const {
   deleteWorkspace,
   updateWorkspaceDescription,
   updateWorkspaceProfileImg,
+  getWorkspaceInvitationLink,
 } = workSpaceService;
