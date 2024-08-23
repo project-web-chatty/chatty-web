@@ -32,7 +32,7 @@ import CreateChannel from "../components/Modals/CreateChannelModal";
 import LeaveWorkspace from "../components/Modals/LeaveWorkspaceModal";
 import DeleteWorkspace from "../components/Modals/DeleteWorkspaceModal";
 import EditWorkspaceInfo from "../components/Modals/EditWorkspaceInfoModal";
-import CreateInvitationLink from "../components/Modals/CreateInvitationCodeModal";
+import CreateInvitationLink from "../components/Modals/CreateInvitationLinkModal";
 
 // TODO : Response타입 정해지면 수정 필요. (현재는 임시)
 interface Message {

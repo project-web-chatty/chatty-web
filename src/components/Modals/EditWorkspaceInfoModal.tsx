@@ -1,12 +1,13 @@
 import React, { useState } from "react";
-import icon_upload from "../../assets/icon/icon_upload.png";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "../../store/store";
+import { fetchWorkspaceInfo } from "../../features/workspaceSlice";
 import {
   updateWorkspaceDescription,
   updateWorkspaceProfileImg,
 } from "../../api/workspace/WorkSpaceAPI";
-import { useDispatch } from "react-redux";
-import { fetchWorkspaceInfo } from "../../features/workspaceSlice";
-import { AppDispatch } from "../../store/store";
+import iconUpload from "../../assets/icon/icon_upload.png";
+import IconClose from "../../assets/icon/icon_close.png";
 
 interface EditWorkspaceInfoProps {
   closeModal: () => void;
@@ -63,20 +64,20 @@ const EditWorkspaceInfo: React.FC<EditWorkspaceInfoProps> = ({
         onClick={closeModal}
       >
         <div
-          className="w-96 bg-white p-8 rounded shadow-lg relative"
+          className="w-[540px] h-[290px] bg-white p-8 rounded shadow-lg relative"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex justify-between items-center">
-            <p className="text-xl font-bold">{title}</p>
+            <p className="text-3xl font-bold">{title}</p>
             <button
               className="text-gray-500 hover:text-gray-700"
               onClick={closeModal}
             >
-              &times;
+              <img src={IconClose} alt="" className="w-6 h-6" />
             </button>
           </div>
-          <div className="py-5">
-            <p className="text-sm">워크스페이스 소개</p>
+          <div className="mt-[40px]">
+            <p className="text-base mb-[8px]">워크스페이스 소개</p>
             <input
               type="text"
               className="border-2 border-black w-full p-2 rounded-md text-sm focus:outline-none mt-2"
@@ -98,7 +99,7 @@ const EditWorkspaceInfo: React.FC<EditWorkspaceInfoProps> = ({
                     <img
                       className="w-auto cursor-pointer"
                       alt="업로드아이콘"
-                      src={uploadFile ? workspaceIcon : icon_upload}
+                      src={uploadFile ? workspaceIcon : iconUpload}
                     />
                   </div>
                 </label>
