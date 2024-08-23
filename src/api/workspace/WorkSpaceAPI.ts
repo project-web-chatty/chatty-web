@@ -1,7 +1,7 @@
 import { Put } from "./../util/apiUtils";
 import { Delete, Get, Post } from "../util/apiUtils";
 import { ResponseWorkspace } from "../../types/workspace";
-import { ResponseUserInfo } from "../../types/user";
+import { User } from "../../types/user";
 import { channel } from "./../../types/channel.d";
 
 const workSpaceService = {
@@ -11,7 +11,7 @@ const workSpaceService = {
    * @returns
    */
   getUserInfo: async () => {
-    const response = await Get<ResponseUserInfo>("/me");
+    const response = await Get<User>("/me");
 
     return response.data.result;
   },
@@ -144,6 +144,16 @@ const workSpaceService = {
       console.log(response.data.message);
     }
   },
+
+  getWorkspaceMembers: async (workspaceId: number) => {
+    const response = await Get(`/workspace/${workspaceId}/members`);
+
+    if (response.data.isSuccess) {
+      return response.data.result as User[];
+    } else {
+      console.log(response.data.message);
+    }
+  },
 };
 
 export const {
@@ -157,4 +167,5 @@ export const {
   updateWorkspaceDescription,
   updateWorkspaceProfileImg,
   getWorkspaceInvitationLink,
+  getWorkspaceMembers,
 } = workSpaceService;

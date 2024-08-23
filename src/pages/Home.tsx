@@ -20,6 +20,7 @@ import {
   getUserInfo,
   getWorkspaceChannels,
   getWorkspaceInfo,
+  getWorkspaceMembers,
 } from "../api/workspace/WorkSpaceAPI";
 import { Client, IMessage } from "@stomp/stompjs";
 import { AppDispatch, RootState } from "../store/store";
@@ -33,6 +34,7 @@ import LeaveWorkspace from "../components/Modals/LeaveWorkspaceModal";
 import DeleteWorkspace from "../components/Modals/DeleteWorkspaceModal";
 import EditWorkspaceInfo from "../components/Modals/EditWorkspaceInfoModal";
 import CreateInvitationLink from "../components/Modals/CreateInvitationLinkModal";
+import { User } from "../types/user";
 
 // TODO : Response타입 정해지면 수정 필요. (현재는 임시)
 interface Message {
@@ -44,14 +46,6 @@ interface Message {
   regDate: any;
 }
 
-//Member 인터페이스 정의
-interface Member {
-  id: number;
-  nickname: string;
-  profile: string;
-  isManager: boolean;
-}
-
 function Home() {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
@@ -59,6 +53,7 @@ function Home() {
   const { workspaceId } = state;
   const [channelId, setChannelId] = useState<number | null>(null); // 우측 채팅내역을 갖는 채널의 id
   const [workspaceDescription, setWorkspaceDescription] = useState<string>("");
+  const [members, setMembers] = useState<User[]>([]);
 
   const user = useSelector((state: RootState) => state.user); // 유저 상태 조회
   const workspace = useSelector((state: RootState) => state.workspace);
@@ -74,6 +69,10 @@ function Home() {
       getWorkspaceChannels(workspaceId).then((res) => {
         setChannels(() => res);
         setChannelId(() => res[0].id);
+      });
+
+      getWorkspaceMembers(workspaceId).then((res) => {
+        res && setMembers(() => res);
       });
     }
   }, []);
@@ -92,6 +91,7 @@ function Home() {
       transform: "translate(-50%, -50%)",
     },
   };
+
   /**
    * Chat 통신
    */
@@ -154,34 +154,6 @@ function Home() {
       setInput("");
     }
   };
-
-  //멤버 관리하기 모달
-  const [members, setMembers] = useState<Member[]>([
-    {
-      id: 1,
-      nickname: "임준식",
-      profile: People,
-      isManager: false,
-    },
-    {
-      id: 2,
-      nickname: "최만구",
-      profile: People,
-      isManager: false,
-    },
-    {
-      id: 3,
-      nickname: "이승수",
-      profile: People,
-      isManager: false,
-    },
-    {
-      id: 4,
-      nickname: "손구근",
-      profile: People,
-      isManager: false,
-    },
-  ]);
 
   const [isWorkspaceModalOpen, setIsWorkspaceModalOpen] = useState(false);
   const [channels, setChannels] = useState<channel[] | null>(null);
@@ -279,14 +251,18 @@ function Home() {
       {/* 두번째 탭 */}
       <div className="w-72 min-h-screen flex flex-col justify-between bg-body py-6 px-4">
         <div>
-          <div className="flex justify-between items-center">
-            <p className="text-xl font-bold text-white">Channel Name</p>
-            <img
-              className="inset-x-0 bottom-0 w-5 h-2 cursor-pointer"
-              src={ArrowDown}
-              alt=""
+          <div className="flex justify-between items-center w-[100%] h-[30px]">
+            <p className="text-xl font-bold text-white">{workspace.name}</p>
+            <div
+              className="flex jusfify-center items-center h-[100%] cursor-pointer"
               onClick={toggleMenu}
-            />
+            >
+              <img
+                className="inset-x-0 bottom-0 w-5 h-2 "
+                src={ArrowDown}
+                alt=""
+              />
+            </div>
           </div>
           <div className="border border-white w-full mt-5"></div>
           <div style={{ overflowY: "auto", height: "calc(100vh - 120px)" }}>
