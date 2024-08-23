@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState } from "react";
 
 import GroupMenu from "../components/GroupIcon";
-import { ResponseUserInfo } from "../types/user";
 import WorkspaceForm from "../components/WorkspaceFormModal";
 import { getUserInfo, joinWorkspace } from "../api/workspace/WorkSpaceAPI";
 import { AppDispatch, RootState } from "../store/store";

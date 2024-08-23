@@ -1,7 +1,7 @@
 import { CommonResponse } from "./common.d";
 import { ResponseWorkspace } from "./workspace.d";
 
-export interface ResponseUserInfo extends CommonResponse {
+export interface User extends CommonResponse {
   id: number;
   username: string;
   email?: string;

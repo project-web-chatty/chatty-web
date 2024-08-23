@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { getWorkspaceInfo } from "../api/workspace/WorkSpaceAPI";
-import { ResponseUserInfo } from "../types/user";
+import { User } from "../types/user";
 import { Channel } from "../types/workspace";
 
 interface WorkspaceState {
@@ -8,7 +8,7 @@ interface WorkspaceState {
   name: string | null;
   profileImg?: string | null;
   description: string | null;
-  members: ResponseUserInfo[] | null;
+  members: User[] | null;
   channels: Channel[] | null;
   createdDate: string | null;
   lastModifiedDate: string | null;
