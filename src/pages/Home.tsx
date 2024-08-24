@@ -35,6 +35,7 @@ import DeleteWorkspace from "../components/Modals/DeleteWorkspaceModal";
 import EditWorkspaceInfo from "../components/Modals/EditWorkspaceInfoModal";
 import CreateInvitationLink from "../components/Modals/CreateInvitationLinkModal";
 import { User } from "../types/user";
+import { Channel } from "../types/workspace";
 
 // TODO : Response타입 정해지면 수정 필요. (현재는 임시)
 interface Message {
@@ -51,7 +52,7 @@ function Home() {
   const dispatch = useDispatch<AppDispatch>();
   const { state } = useLocation();
   const { workspaceId } = state;
-  const [channelId, setChannelId] = useState<number | null>(null); // 우측 채팅내역을 갖는 채널의 id
+  const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
   const [workspaceDescription, setWorkspaceDescription] = useState<string>("");
   const [members, setMembers] = useState<User[]>([]);
 
@@ -68,7 +69,7 @@ function Home() {
 
       getWorkspaceChannels(workspaceId).then((res) => {
         setChannels(() => res);
-        setChannelId(() => res[0].id);
+        setSelectedChannel(() => res[0]);
       });
 
       getWorkspaceMembers(workspaceId).then((res) => {
@@ -99,6 +100,8 @@ function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
 
   useEffect(() => {
+    if (!selectedChannel) return;
+
     const token = localStorage.getItem("accessToken");
 
     const stompClient = new Client({
@@ -110,8 +113,10 @@ function Home() {
     });
 
     stompClient.onConnect = (frame) => {
+      setMessages(() => []); // TODO : 채팅내역 데이터 받아와서 담아주기
+
       stompClient.subscribe(
-        `/topic/channel.${channelId}`,
+        `/topic/channel.${selectedChannel.id}`,
         (message: IMessage) => {
           if (message.body) {
             setMessages((prevMessages: Message[]) => [
@@ -134,20 +139,20 @@ function Home() {
     return () => {
       stompClient.deactivate();
     };
-  }, [channelId]);
+  }, [selectedChannel]);
 
   const sendMessage = (message: string) => {
-    if (client && client.connected) {
+    if (client && client.connected && selectedChannel) {
       // TODO : 메세지 형식 변경됨에 따라 추가수정 필요(아래 형식은 임시로 사용한다고 함)
       const chatMessage = {
-        channelId,
+        id: selectedChannel.id,
         senderNickname: user.nickname,
         senderUsername: user.username,
         content: message,
       };
 
       client.publish({
-        destination: `/pub/chat.message.${channelId}`,
+        destination: `/pub/chat.message.${selectedChannel.id}`,
         body: JSON.stringify(chatMessage),
       });
 
@@ -175,6 +180,10 @@ function Home() {
 
   const closeModal = () => {
     setSelectedModal(null);
+  };
+
+  const handleChannelChange = (selectedChannel: Channel) => {
+    setSelectedChannel(() => selectedChannel);
   };
 
   //input 상태 변수와 setInput 함수 정의
@@ -264,10 +273,17 @@ function Home() {
               />
             </div>
           </div>
-          <div className="border border-white w-full mt-5"></div>
-          <div style={{ overflowY: "auto", height: "calc(100vh - 120px)" }}>
+          <div className="border border-white w-full mt-5 "></div>
+          <div
+            className="py-2 flex flex-col gap-1"
+            style={{ overflowY: "auto", height: "calc(100vh - 120px)" }}
+          >
             {channels?.map((channel, i) => (
-              <div className="flex my-5 justify-between" key={channel.id}>
+              <div
+                className={`flex justify-between p-3 rounded ${channel.name === selectedChannel?.name ? "bg-slate-600" : "hover:bg-slate-700 cursor-pointer"}`}
+                key={channel.id}
+                onClick={() => handleChannelChange(channel)}
+              >
                 <p className="text-sm font-bold text-white"># {channel.name}</p>
                 {/* <p className="text-xs text-gray">5 new messaages</p> */}
               </div>
@@ -285,7 +301,9 @@ function Home() {
         style={{ width: "calc(100vw - 24rem)" }}
       >
         <div className="flex justify-between items-center pb-6">
-          <p className="text-xl font-bold text-white"># FRONTEND</p>
+          <p className="text-xl font-bold text-white">
+            # {selectedChannel?.name}
+          </p>
           <img className="w-5 h-5" src={Search} alt="" />
         </div>
         <div
