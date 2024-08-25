@@ -26,7 +26,7 @@ import { Client, IMessage } from "@stomp/stompjs";
 import { AppDispatch, RootState } from "../store/store";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchWorkspaceInfo } from "../features/workspaceSlice";
-import { fetchUserInfo } from "../features/userSlice";
+import { fetchUserInfo, setRole } from "../features/userSlice";
 import ReactModal from "react-modal";
 import ManageMembers from "../components/Modals/ManageMemberModal";
 import CreateChannel from "../components/Modals/CreateChannelModal";
@@ -62,6 +62,16 @@ function Home() {
   useEffect(() => {
     if (!user.id) getUserInfo().then((res) => dispatch(fetchUserInfo()));
 
+    getWorkspaceMembers(workspaceId).then((res) => {
+      if (res) {
+        setMembers(() => res);
+        const filteredUser = res.filter((member) => member.id === user.id)[0];
+        filteredUser && dispatch(setRole(filteredUser.role));
+      }
+    });
+  }, [user.id]);
+
+  useEffect(() => {
     if (!!workspaceId) {
       getWorkspaceInfo(workspaceId).then((res) => {
         dispatch(fetchWorkspaceInfo(workspaceId));
@@ -70,10 +80,6 @@ function Home() {
       getWorkspaceChannels(workspaceId).then((res) => {
         setChannels(() => res);
         setSelectedChannel(() => res[0]);
-      });
-
-      getWorkspaceMembers(workspaceId).then((res) => {
-        res && setMembers(() => res);
       });
     }
   }, []);

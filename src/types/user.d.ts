@@ -6,6 +6,7 @@ export interface User extends CommonResponse {
   username: string;
   email?: string;
   role: string;
+  workspaceRole: "ROLE_WORKSPACE_MEMBER" | "ROLE_WORKSPACE_OWNER";
   profileImg?: string;
   nickname: string;
   introduction: string;
