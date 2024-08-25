@@ -1,14 +1,34 @@
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { deleteWorkspace } from "../../api/workspace/WorkSpaceAPI";
 import IconClose from "../../assets/icon/icon_close.png";
+import { RootState } from "../../store/store";
 
 interface DeleteWorkspaceProps {
   closeModal: () => void;
   title: string | null;
+  workspaceId: number;
 }
 
 const DeleteWorkspace: React.FC<DeleteWorkspaceProps> = ({
   closeModal,
   title,
+  workspaceId,
 }) => {
+  const navigate = useNavigate();
+  const user = useSelector((state: RootState) => state.user);
+  const onClickButton = () => {
+    // Delete 전 한번 더 권한 확인하기
+    if (user.workspaceRole === "ROLE_WORKSPACE_OWNER") {
+      deleteWorkspace(workspaceId).then((res) => {
+        if (res) {
+          closeModal();
+          navigate("/workspace");
+        }
+      });
+    }
+  };
+
   return (
     <>
       <div
@@ -32,10 +52,16 @@ const DeleteWorkspace: React.FC<DeleteWorkspaceProps> = ({
           <div className="mt-[40px]">
             <div className="flex justify-center"></div>
             <div className="flex justify-between mt-10 items-center">
-              <button className="w-24 bg-white text-sm text-black py-1 px-5 rounded-md border-2 border-black">
+              <button
+                className="w-24 bg-white text-sm text-black py-1 px-5 rounded-md border-2 border-black"
+                onClick={closeModal}
+              >
                 취소
               </button>
-              <button className="w-24 bg-orange text-sm text-white py-1 px-5 rounded-md">
+              <button
+                className="w-24 bg-orange text-sm text-white py-1 px-5 rounded-md"
+                onClick={onClickButton}
+              >
                 삭제하기
               </button>
             </div>

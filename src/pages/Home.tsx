@@ -232,15 +232,6 @@ function Home() {
     setInput(e.currentTarget.value);
   };
 
-  const onClickDeleteButton = () => {
-    // TODO : USER가 오너인지, 멤버인지 권한 확인하는 코드 추가
-    //   deleteWorkspace(workspaceId).then((res) => {
-    //     if (res) {
-    //       navigate("/workspace");
-    //     }
-    //   });
-  };
-
   return (
     <div className="flex">
       {/* 맨 좌측 탭 */}
@@ -438,7 +429,11 @@ function Home() {
               />
             ),
             "워크스페이스 삭제": (
-              <DeleteWorkspace title={selectedModal} closeModal={closeModal} />
+              <DeleteWorkspace
+                title={selectedModal}
+                closeModal={closeModal}
+                workspaceId={workspaceId}
+              />
             ),
           }[selectedModal]}
       </ReactModal>
