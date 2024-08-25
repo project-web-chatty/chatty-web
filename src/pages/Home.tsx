@@ -17,11 +17,11 @@ import { channel } from "../types/channel";
 import basic_img from "../assets/image/basic_img.jpg";
 import {
   deleteWorkspace,
-  getUserInfo,
   getWorkspaceChannels,
   getWorkspaceInfo,
   getWorkspaceMembers,
 } from "../api/workspace/WorkSpaceAPI";
+import { getUserInfo } from "../api/user/UserAPI";
 import { Client, IMessage } from "@stomp/stompjs";
 import { AppDispatch, RootState } from "../store/store";
 import { useDispatch, useSelector } from "react-redux";
@@ -431,7 +431,11 @@ function Home() {
               />
             ),
             "워크스페이스 나가기": (
-              <LeaveWorkspace title={selectedModal} closeModal={closeModal} />
+              <LeaveWorkspace
+                title={selectedModal}
+                closeModal={closeModal}
+                workspaceId={workspaceId}
+              />
             ),
             "워크스페이스 삭제": (
               <DeleteWorkspace title={selectedModal} closeModal={closeModal} />

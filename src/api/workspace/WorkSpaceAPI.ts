@@ -6,17 +6,6 @@ import { channel } from "./../../types/channel.d";
 
 const workSpaceService = {
   /**
-   * API to get detailed user information"
-   * @param
-   * @returns
-   */
-  getUserInfo: async () => {
-    const response = await Get<User>("/me");
-
-    return response.data.result;
-  },
-
-  /**
    * API to get user's workspaces information
    * @param
    * @returns
@@ -157,7 +146,6 @@ const workSpaceService = {
 };
 
 export const {
-  getUserInfo,
   getWorkspaceInfo,
   getWorkspaceChannels,
   createChannel,

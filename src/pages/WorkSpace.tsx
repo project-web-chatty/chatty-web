@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 
 import GroupMenu from "../components/GroupIcon";
 import WorkspaceForm from "../components/WorkspaceFormModal";
-import { getUserInfo, joinWorkspace } from "../api/workspace/WorkSpaceAPI";
+import { getUserInfo } from "../api/user/UserAPI";
+import { joinWorkspace } from "../api/workspace/WorkSpaceAPI";
 import { AppDispatch, RootState } from "../store/store";
 import { fetchUserInfo } from "../features/userSlice";
 

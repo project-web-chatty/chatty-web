@@ -1,6 +1,6 @@
 // userSlice.ts
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { getUserInfo } from "../api/workspace/WorkSpaceAPI";
+import { getUserInfo } from "../api/user/UserAPI";
 import { ResponseWorkspace } from "../types/workspace";
 
 interface UserState {
