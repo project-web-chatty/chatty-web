@@ -1,20 +1,10 @@
+import { Put } from "./../util/apiUtils";
 import { Delete, Get, Post } from "../util/apiUtils";
 import { ResponseWorkspace } from "../../types/workspace";
-import { ResponseUserInfo } from "../../types/user";
+import { User } from "../../types/user";
 import { channel } from "./../../types/channel.d";
 
 const workSpaceService = {
-  /**
-   * API to get detailed user information"
-   * @param
-   * @returns
-   */
-  getUserInfo: async () => {
-    const response = await Get<ResponseUserInfo>("/me");
-
-    return response.data.result;
-  },
-
   /**
    * API to get user's workspaces information
    * @param
@@ -61,6 +51,54 @@ const workSpaceService = {
   },
 
   /**
+   * API for adding a new channel in the workspace
+   * @param workspaceId
+   * @param channelName
+   * @returns
+   */
+  createChannel: async (workspaceId: number, channelName: string) => {
+    const response = await Post(`/workspace/${workspaceId}/channels`, {
+      name: channelName,
+    });
+
+    return response;
+  },
+
+  updateWorkspaceDescription: async (
+    workspaceId: number,
+    description: string
+  ) => {
+    const response = await Put(`/workspace/${workspaceId}`, {
+      description: description,
+    });
+
+    return response;
+  },
+
+  updateWorkspaceProfileImg: async (workspaceId: number, file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await Post(
+      `/workspace/${workspaceId}/profile-image`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
+    return response;
+  },
+
+  getWorkspaceInvitationLink: async (workspaceId: number) => {
+    const response = await Get(`/workspace/${workspaceId}/invite`);
+
+    return response.data.result as string;
+  },
+
+  /**
    * API to join another user's workspace
    * @param
    * @returns
@@ -95,13 +133,27 @@ const workSpaceService = {
       console.log(response.data.message);
     }
   },
+
+  getWorkspaceMembers: async (workspaceId: number) => {
+    const response = await Get(`/workspace/${workspaceId}/members`);
+
+    if (response.data.isSuccess) {
+      return response.data.result as User[];
+    } else {
+      console.log(response.data.message);
+    }
+  },
 };
 
 export const {
-  getUserInfo,
   getWorkspaceInfo,
   getWorkspaceChannels,
+  createChannel,
   createWorkspace,
   joinWorkspace,
   deleteWorkspace,
+  updateWorkspaceDescription,
+  updateWorkspaceProfileImg,
+  getWorkspaceInvitationLink,
+  getWorkspaceMembers,
 } = workSpaceService;

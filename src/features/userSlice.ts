@@ -1,6 +1,6 @@
 // userSlice.ts
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { getUserInfo } from "../api/workspace/WorkSpaceAPI";
+import { getUserInfo } from "../api/user/UserAPI";
 import { ResponseWorkspace } from "../types/workspace";
 
 interface UserState {
@@ -8,6 +8,7 @@ interface UserState {
   username: string | null;
   email?: string | null;
   role: string | null;
+  workspaceRole: "ROLE_WORKSPACE_OWNER" | "ROLE_WORKSPACE_MEMBER" | null;
   profileImg?: string | null;
   nickname: string | null;
   introduction: string | null;
@@ -23,6 +24,7 @@ const initialState: UserState = {
   username: null,
   email: null,
   role: null,
+  workspaceRole: null,
   profileImg: null,
   nickname: null,
   introduction: null,
@@ -55,6 +57,7 @@ const userSlice = createSlice({
       state.username = null;
       state.email = null;
       state.role = null;
+      state.workspaceRole = null;
       state.profileImg = null;
       state.nickname = null;
       state.introduction = null;
@@ -64,6 +67,9 @@ const userSlice = createSlice({
       state.loading = false;
       state.error = null;
       // 기타 상태 초기화 로직
+    },
+    setRole: (state, action) => {
+      state.workspaceRole = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -77,6 +83,7 @@ const userSlice = createSlice({
         state.username = action.payload.username;
         state.email = action.payload.email;
         state.role = action.payload.role;
+        state.workspaceRole = action.payload.workspaceRole;
         state.profileImg = action.payload.profileImg;
         state.nickname = action.payload.nickname;
         state.introduction = action.payload.introduction;
@@ -92,5 +99,5 @@ const userSlice = createSlice({
   },
 });
 
-export const { clearUser } = userSlice.actions;
+export const { clearUser, setRole } = userSlice.actions;
 export default userSlice.reducer;
