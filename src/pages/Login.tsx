@@ -24,7 +24,7 @@ const Login: React.FC = () => {
 
   const handleLogin = () => {
     loginApi(loginInfo).then(async (res) => {
-      if (res && !!localStorage.getItem("accessToken")) {
+      if (res && !!sessionStorage.getItem("accessToken")) {
         return navigate("/workspace");
       }
     });
