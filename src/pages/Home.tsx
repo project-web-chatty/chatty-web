@@ -108,7 +108,7 @@ function Home() {
   useEffect(() => {
     if (!selectedChannel) return;
 
-    const token = localStorage.getItem("accessToken");
+    const token = sessionStorage.getItem("accessToken");
 
     const stompClient = new Client({
       brokerURL: `${process.env.REACT_APP_SOCKET_URL}`,
