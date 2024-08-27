@@ -2,7 +2,6 @@ import { useNavigate } from "react-router";
 import { Post } from "../util/apiUtils";
 import { RequestLoginParams, ResponseLogin } from "./../../types/auth.d";
 const authService = {
-  // const navigate = useNavigate();
   /**
    * This function sends a login request to the server.
    * If successful, it stores the token in local storage.
@@ -14,12 +13,10 @@ const authService = {
 
       if (response.data.isSuccess) {
         const { accessToken, refreshToken } = response.data.result;
-        // 토큰 저장
-        await sessionStorage.setItem("accessToken", accessToken);
-        // await localStorage.setItem("refreshToken", refreshToken);
-        document.cookie = `refreshToken=${refreshToken}; Secure;`;
-        // // 로그인 이후 워크스페이스로 이동 => hook은 이 안에 쓸 수 없음, 다른방식 이용해야함
-        // navigate("/workspace");
+
+        sessionStorage.setItem("accessToken", accessToken);
+        sessionStorage.setItem("refreshToken", refreshToken);
+
         return response.data.isSuccess;
       } else {
         console.error("Login failed: ", response.data.message);
@@ -28,6 +25,28 @@ const authService = {
       console.error("Login failed: ", err);
     }
   },
+
+  /**
+   * Request authentication using the refresh token when the access token expires
+   * @returns {accessToekn, refreshToken}
+   */
+  postRefreshToken: async () => {
+    const response = await Post<ResponseLogin>(
+      "/auth/reissue",
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${sessionStorage.getItem("refreshToken")}`,
+        },
+      }
+    );
+
+    const { accessToken, refreshToken } = response.data.result;
+    sessionStorage.setItem("accessToken", accessToken);
+    sessionStorage.setItem("refreshToken", refreshToken);
+
+    return accessToken;
+  },
 };
 
-export const { loginApi } = authService;
+export const { loginApi, postRefreshToken } = authService;
