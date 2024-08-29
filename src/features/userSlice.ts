@@ -15,6 +15,7 @@ interface UserState {
   myWorkspaces: [ResponseWorkspace] | null;
   createdDate: string | null;
   lastModifiedDate: string | null;
+  joinDate: string | null;
   loading: boolean;
   error: string | null;
 }
@@ -31,6 +32,7 @@ const initialState: UserState = {
   myWorkspaces: null,
   createdDate: null,
   lastModifiedDate: null,
+  joinDate: null,
   loading: false,
   error: null,
 };
@@ -64,6 +66,7 @@ const userSlice = createSlice({
       state.myWorkspaces = null;
       state.createdDate = null;
       state.lastModifiedDate = null;
+      state.joinDate = null;
       state.loading = false;
       state.error = null;
       // 기타 상태 초기화 로직

@@ -84,6 +84,10 @@ function Home() {
     }
   }, []);
 
+  const handleDeleteMember = (memberId: number) => {
+    setMembers((members) => members.filter((member) => member.id !== memberId));
+  };
+
   const customStyles = {
     overlay: {
       backgroundColor: "rgba(0,0,0,0.5)",
@@ -411,7 +415,11 @@ function Home() {
               <ManageMembers
                 title={selectedModal}
                 closeModal={closeModal}
+                workspaceId={workspaceId}
                 members={members}
+                isDeletedMember={(memberId: number) =>
+                  handleDeleteMember(memberId)
+                }
               />
             ),
             "초대링크 생성하기": (
