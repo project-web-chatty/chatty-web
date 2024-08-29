@@ -143,6 +143,24 @@ const workSpaceService = {
       console.log(response.data.message);
     }
   },
+
+  /**
+   * API to delete member (Only owner)
+   * @param workspaceId
+   * @param memberId
+   * @returns
+   */
+  deleteMember: async (workspaceId: number, memberId: number) => {
+    const response = await Delete(
+      `/workspace/${workspaceId}/members/${memberId}`
+    );
+
+    if (response.data.isSuccess) {
+      return response;
+    } else {
+      console.log(response.data.message);
+    }
+  },
 };
 
 export const {
@@ -156,4 +174,5 @@ export const {
   updateWorkspaceProfileImg,
   getWorkspaceInvitationLink,
   getWorkspaceMembers,
+  deleteMember,
 } = workSpaceService;
