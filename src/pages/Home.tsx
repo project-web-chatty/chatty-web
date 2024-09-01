@@ -1,43 +1,40 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import HomeLogo from "../assets/icon/icon_home.png";
-import MessageLogo from "../assets/icon/icon_message.png";
-import UserLogo from "../assets/icon/icon_user.png";
-import ArrowDown from "../assets/icon/icon_arrowDown.png";
-import PlusCircle from "../assets/icon/icon_plusCircle.png";
-import Search from "../assets/icon/icon_search.png";
-import People from "../assets/icon/icon_people.png";
-import Clip from "../assets/icon/icon_clipicon.png";
-import SendMessage from "../assets/icon/icon_sendMessage.png";
-import Upload from "../assets/icon/icon_upload.png";
+import { useLocation } from "react-router-dom";
+import { Client, IMessage } from "@stomp/stompjs";
+import ReactModal from "react-modal";
+import IconClip from "../assets/icon/icon_clipicon.png";
+import IconSearch from "../assets/icon/icon_search.png";
+import IconUpload from "../assets/icon/icon_upload.png";
+import IconHome from "../assets/icon/icon_home.png";
+import IconUser from "../assets/icon/icon_user.png";
+import ImgBasic from "../assets/image/basic_img.jpg";
+import IconArrowDown from "../assets/icon/icon_arrowDown.png";
+import IconMessage from "../assets/icon/icon_message.png";
+import IconPlusCircle from "../assets/icon/icon_plusCircle.png";
+import IconSendMessage from "../assets/icon/icon_sendMessage.png";
+import {
+  getWorkspaceInfo,
+  getWorkspaceMembers,
+  getWorkspaceChannels,
+} from "../api/workspace/WorkSpaceAPI";
+import { getUserInfo } from "../api/user/UserAPI";
+import { AppDispatch, RootState } from "../store/store";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchUserInfo, setRole } from "../features/userSlice";
+import { fetchWorkspaceInfo } from "../features/workspaceSlice";
+import { User } from "../types/user";
+import { Channel, ResponseWorkspace } from "../types/workspace";
+import DropdownMenu from "../components/DropdownMenu";
+import DropdownItem from "../components/DropdownItem";
 import ChattingContainer from "../components/ChattingContainer";
 import Modal from "../components/Modal"; //기본 Modal 컴포넌트
 import MenuModal from "../components/MenuModal"; //Channel Name 우측 화살표를 누르면 나오는 메뉴 Options
-import { channel } from "../types/channel";
-import basic_img from "../assets/image/basic_img.jpg";
-import {
-  deleteWorkspace,
-  getWorkspaceChannels,
-  getWorkspaceInfo,
-  getWorkspaceMembers,
-} from "../api/workspace/WorkSpaceAPI";
-import { getUserInfo } from "../api/user/UserAPI";
-import { Client, IMessage } from "@stomp/stompjs";
-import { AppDispatch, RootState } from "../store/store";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchWorkspaceInfo } from "../features/workspaceSlice";
-import { fetchUserInfo, setRole } from "../features/userSlice";
-import ReactModal from "react-modal";
 import ManageMembers from "../components/Modals/ManageMemberModal";
 import CreateChannel from "../components/Modals/CreateChannelModal";
 import LeaveWorkspace from "../components/Modals/LeaveWorkspaceModal";
 import DeleteWorkspace from "../components/Modals/DeleteWorkspaceModal";
 import EditWorkspaceInfo from "../components/Modals/EditWorkspaceInfoModal";
 import CreateInvitationLink from "../components/Modals/CreateInvitationLinkModal";
-import { User } from "../types/user";
-import { Channel, ResponseWorkspace } from "../types/workspace";
-import DropdownMenu from "../components/DropdownMenu";
-import DropdownItem from "../components/DropdownItem";
 
 // TODO : Response타입 정해지면 수정 필요. (현재는 임시)
 interface Message {
@@ -50,24 +47,47 @@ interface Message {
 }
 
 function Home() {
-  const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   const { state } = useLocation();
   const { workspaceId } = state;
-  const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
-  const [workspaceDescription, setWorkspaceDescription] = useState<string>("");
-  const [members, setMembers] = useState<User[]>([]);
 
+  const user = useSelector((state: RootState) => state.user); // 유저 상태 조회
+  const currentWorkspace = useSelector((state: RootState) => state.workspace);
+
+  const chatEndRef = useRef<HTMLDivElement>(null); // chatEndRef ref 변수 정의
+  const workspaceListRef = useRef<HTMLDivElement>(null);
+
+  const [input, setInput] = useState<string>(""); //input 상태 변수와 setInput 함수 정의
+  const [client, setClient] = useState<Client | null>(null);
+  const [members, setMembers] = useState<User[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [channels, setChannels] = useState<Channel[] | null>(null);
+  const [isMenuOpen, setMenuOpen] = useState(false);
+  const [isComposing, setIsComposing] = useState<boolean>(false); //조합상태감지를 위한 상태변수. 조합문자란, 아직 완성되지 않은 문자로, 여러 키 입력이 조합되어 최종문자가 만들어지는 과정을 말함(한글, 중국어, 일본어 등). isComposing이 적용되지 않으면, 채팅을 엔터로 입력 시, 마지막 글자가 중복되서 한번 더 채팅으로 보내짐.
+  const [selectedModal, setSelectedModal] = useState<string | null>(null);
+  const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
   const [isWorkspaceListOpen, setIsWorkspaceListOpen] =
     useState<boolean>(false);
-  const workspaceListRef = useRef<HTMLDivElement>(null);
+  const [isWorkspaceModalOpen, setIsWorkspaceModalOpen] = useState(false);
   const [workspaceListPosition, setWorkspaceListPosition] = useState({
     top: 0,
     left: 0,
   });
 
-  const user = useSelector((state: RootState) => state.user); // 유저 상태 조회
-  const currentWorkspace = useSelector((state: RootState) => state.workspace);
+  const customStyles = {
+    overlay: {
+      backgroundColor: "rgba(0,0,0,0.5)",
+    },
+    content: {
+      padding: 0,
+      top: "50%",
+      left: "50%",
+      right: "auto",
+      bottom: "auto",
+      marginRight: "-50%",
+      transform: "translate(-50%, -50%)",
+    },
+  };
 
   useEffect(() => {
     if (!user.id) getUserInfo().then((res) => dispatch(fetchUserInfo()));
@@ -102,49 +122,6 @@ function Home() {
       });
     }
   }, [currentWorkspace.id]);
-
-  const handleDeleteMember = (memberId: number) => {
-    setMembers((members) => members.filter((member) => member.id !== memberId));
-  };
-
-  const handleWorkspaceSwitch = (selectedWorkspaceId?: number) => {
-    if (selectedWorkspaceId) {
-      getWorkspaceInfo(selectedWorkspaceId).then((res) => {
-        dispatch(fetchWorkspaceInfo(selectedWorkspaceId));
-      });
-    } else {
-      if (workspaceListRef.current) {
-        setWorkspaceListPosition({
-          top:
-            workspaceListRef.current.offsetHeight +
-            workspaceListRef.current.offsetTop,
-          left: workspaceListRef.current.offsetLeft,
-        });
-      }
-    }
-    setIsWorkspaceListOpen((isWorkspaceListOpen) => !isWorkspaceListOpen);
-  };
-
-  const customStyles = {
-    overlay: {
-      backgroundColor: "rgba(0,0,0,0.5)",
-    },
-    content: {
-      padding: 0,
-      top: "50%",
-      left: "50%",
-      right: "auto",
-      bottom: "auto",
-      marginRight: "-50%",
-      transform: "translate(-50%, -50%)",
-    },
-  };
-
-  /**
-   * Chat 통신
-   */
-  const [client, setClient] = useState<Client | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
 
   useEffect(() => {
     if (!selectedChannel) return;
@@ -188,6 +165,33 @@ function Home() {
     };
   }, [selectedChannel]);
 
+  //messages 상태가 변경될 때마다 chatEndRef를 이용해 스크롤을 끝으로 이동
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const handleDeleteMember = (memberId: number) => {
+    setMembers((members) => members.filter((member) => member.id !== memberId));
+  };
+
+  const handleWorkspaceSwitch = (selectedWorkspaceId?: number) => {
+    if (selectedWorkspaceId) {
+      getWorkspaceInfo(selectedWorkspaceId).then((res) => {
+        dispatch(fetchWorkspaceInfo(selectedWorkspaceId));
+      });
+    } else {
+      if (workspaceListRef.current) {
+        setWorkspaceListPosition({
+          top:
+            workspaceListRef.current.offsetHeight +
+            workspaceListRef.current.offsetTop,
+          left: workspaceListRef.current.offsetLeft,
+        });
+      }
+    }
+    setIsWorkspaceListOpen((isWorkspaceListOpen) => !isWorkspaceListOpen);
+  };
+
   const sendMessage = (message: string) => {
     if (client && client.connected && selectedChannel) {
       // TODO : 메세지 형식 변경됨에 따라 추가수정 필요(아래 형식은 임시로 사용한다고 함)
@@ -207,14 +211,9 @@ function Home() {
     }
   };
 
-  const [isWorkspaceModalOpen, setIsWorkspaceModalOpen] = useState(false);
-  const [channels, setChannels] = useState<channel[] | null>(null);
-
   const openWorkspaceModal = () => setIsWorkspaceModalOpen(true);
-  const closeWorkspaceModal = () => setIsWorkspaceModalOpen(false);
 
-  const [isMenuOpen, setMenuOpen] = useState(false);
-  const [selectedModal, setSelectedModal] = useState<string | null>(null);
+  const closeWorkspaceModal = () => setIsWorkspaceModalOpen(false);
 
   const toggleMenu = () => {
     setMenuOpen(!isMenuOpen);
@@ -232,20 +231,6 @@ function Home() {
   const handleChannelChange = (selectedChannel: Channel) => {
     setSelectedChannel(() => selectedChannel);
   };
-
-  //input 상태 변수와 setInput 함수 정의
-  const [input, setInput] = useState<string>("");
-  //isComposing 상태 변수와 setIsComposing 함수 정의
-  //조합상태감지를 위한 상태변수. 조합문자란, 아직 완성되지 않은 문자로, 여러 키 입력이 조합되어 최종문자가 만들어지는 과정을 말함(한글, 중국어, 일본어 등).
-  //isComposing이 적용되지 않으면, 채팅을 엔터로 입력 시, 마지막 글자가 중복되서 한번 더 채팅으로 보내짐.
-  const [isComposing, setIsComposing] = useState<boolean>(false);
-  //chatEndRef ref 변수 정의
-  const chatEndRef = useRef<HTMLDivElement>(null);
-
-  //messages 상태가 변경될 때마다 chatEndRef를 이용해 스크롤을 끝으로 이동
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
 
   //키다운 핸들러(Enter 키 입력 시 메세지 전송)
   const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -282,7 +267,7 @@ function Home() {
           onClick={() => handleWorkspaceSwitch()}
           ref={workspaceListRef}
         >
-          <img src={currentWorkspace.profileImg ?? basic_img} alt="" />
+          <img src={currentWorkspace.profileImg ?? ImgBasic} alt="" />
         </div>
         {
           <DropdownMenu
@@ -299,7 +284,7 @@ function Home() {
                   id={workspace.id}
                   isSelected={workspace.id === currentWorkspace.id}
                   name={workspace.name}
-                  img={workspace.profileImg ?? basic_img}
+                  img={workspace.profileImg ?? ImgBasic}
                   onClick={(id) => handleWorkspaceSwitch(id)}
                 ></DropdownItem>
               );
@@ -311,14 +296,14 @@ function Home() {
             className="bg-white inset-x-0 bottom-0 rounded-xl mb-6"
             onClick={openWorkspaceModal}
           >
-            <img className="w-10 h-10" src={MessageLogo} alt="" />
+            <img className="w-10 h-10" src={IconMessage} alt="" />
           </div>
           <img
             className="inset-x-0 bottom-0 w-10 h-10 mb-6"
-            src={HomeLogo}
+            src={IconHome}
             alt=""
           />
-          <img className="inset-x-0 bottom-0 w-10 h-10" src={UserLogo} alt="" />
+          <img className="inset-x-0 bottom-0 w-10 h-10" src={IconUser} alt="" />
         </div>
       </div>
       {/* 두번째 탭 */}
@@ -334,7 +319,7 @@ function Home() {
             >
               <img
                 className="inset-x-0 bottom-0 w-5 h-2 "
-                src={ArrowDown}
+                src={IconArrowDown}
                 alt=""
               />
             </div>
@@ -356,7 +341,7 @@ function Home() {
             ))}
           </div>
           <div className="flex">
-            <img className="w-5 h-5" src={PlusCircle} alt="" />
+            <img className="w-5 h-5" src={IconPlusCircle} alt="" />
             <p className="text-sm text-white ml-5">채널 생성</p>
           </div>
         </div>
@@ -370,7 +355,7 @@ function Home() {
           <p className="text-xl font-bold text-white">
             # {selectedChannel?.name}
           </p>
-          <img className="w-5 h-5" src={Search} alt="" />
+          <img className="w-5 h-5" src={IconSearch} alt="" />
         </div>
         <div
           id="chatContanier"
@@ -394,7 +379,7 @@ function Home() {
           <div ref={chatEndRef}></div>
         </div>
         <div className="w-full h-12 bg-white flex items-center justify-between mt-6 rounded-lg px-3">
-          <img id="clip" className="w-5 h-5" src={Clip} alt="" />
+          <img id="clip" className="w-5 h-5" src={IconClip} alt="" />
           {/*
             1. onKeyDown : 키를 누르기 시작할 때 발생하는 이벤트. 키가 눌려있는 동안 여러 번 발생할 수도 있다.
             2. onKeyUp : 키를 놓을 때 발생하는 이벤트.
@@ -413,7 +398,7 @@ function Home() {
             onCompositionEnd={handleCompositionEnd}
           />
           <button onClick={() => sendMessage(input)}>
-            <img id="submit" className="w-5 h-5" src={SendMessage} alt="" />
+            <img id="submit" className="w-5 h-5" src={IconSendMessage} alt="" />
           </button>
         </div>
       </div>
@@ -439,7 +424,7 @@ function Home() {
           <div className="flex justify-between mt-5 items-center">
             <div className="flex">
               <p className="text-sm">로고 업로드</p>
-              <img id="clip" className="w-5 h-5 ml-5" src={Upload} alt="" />
+              <img id="clip" className="w-5 h-5 ml-5" src={IconUpload} alt="" />
             </div>
             <button className="bg-black text-sm text-white py-1 px-5 rounded-md">
               생성 하기
