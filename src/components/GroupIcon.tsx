@@ -1,10 +1,13 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useCallback } from "react";
-import { useSelector } from "react-redux";
-import { RootState } from "../store/store";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "../store/store";
 import icon_pencil from "../assets/icon/icon_pencil.png";
 import basic_img from "../assets/image/basic_img.jpg";
+import { getWorkspaceInfo } from "../api/workspace/WorkSpaceAPI";
+import { fetchWorkspaceInfo } from "../features/workspaceSlice";
+import { ResponseWorkspace } from "../types/workspace";
 
 export interface IGroupIcon {
   profileImg: string;
@@ -34,11 +37,15 @@ interface GroupMenuProps {
 
 const GroupMenu: React.FC<GroupMenuProps> = ({ openModal }) => {
   const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
   const workspaces = useSelector((state: RootState) => state.user.myWorkspaces);
 
   const openWorkSpace = useCallback(
     (workspaceId?: number) => {
       if (!!workspaceId) {
+        getWorkspaceInfo(workspaceId).then((workspace: ResponseWorkspace) => {
+          dispatch(fetchWorkspaceInfo(workspace.id));
+        });
         navigate(`/home`, { state: { workspaceId: workspaceId } });
       }
     },
