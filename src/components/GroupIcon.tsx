@@ -45,8 +45,8 @@ const GroupMenu: React.FC<GroupMenuProps> = ({ openModal }) => {
       if (!!workspaceId) {
         getWorkspaceInfo(workspaceId).then((workspace: ResponseWorkspace) => {
           dispatch(fetchWorkspaceInfo(workspace.id));
+          navigate(`/home`, { state: { workspaceId: workspaceId } });
         });
-        navigate(`/home`, { state: { workspaceId: workspaceId } });
       }
     },
     [navigate]
