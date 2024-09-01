@@ -35,7 +35,9 @@ import DeleteWorkspace from "../components/Modals/DeleteWorkspaceModal";
 import EditWorkspaceInfo from "../components/Modals/EditWorkspaceInfoModal";
 import CreateInvitationLink from "../components/Modals/CreateInvitationLinkModal";
 import { User } from "../types/user";
-import { Channel } from "../types/workspace";
+import { Channel, ResponseWorkspace } from "../types/workspace";
+import DropdownMenu from "../components/DropdownMenu";
+import DropdownItem from "../components/DropdownItem";
 
 // TODO : Response타입 정해지면 수정 필요. (현재는 임시)
 interface Message {
@@ -56,36 +58,71 @@ function Home() {
   const [workspaceDescription, setWorkspaceDescription] = useState<string>("");
   const [members, setMembers] = useState<User[]>([]);
 
+  const [isWorkspaceListOpen, setIsWorkspaceListOpen] =
+    useState<boolean>(false);
+  const workspaceListRef = useRef<HTMLDivElement>(null);
+  const [workspaceListPosition, setWorkspaceListPosition] = useState({
+    top: 0,
+    left: 0,
+  });
+
   const user = useSelector((state: RootState) => state.user); // 유저 상태 조회
-  const workspace = useSelector((state: RootState) => state.workspace);
+  const currentWorkspace = useSelector((state: RootState) => state.workspace);
 
   useEffect(() => {
     if (!user.id) getUserInfo().then((res) => dispatch(fetchUserInfo()));
 
-    getWorkspaceMembers(workspaceId).then((res) => {
-      if (res) {
-        setMembers(() => res);
-        const filteredUser = res.filter((member) => member.id === user.id)[0];
-        filteredUser && dispatch(setRole(filteredUser.role));
-      }
-    });
+    if (currentWorkspace.id)
+      getWorkspaceMembers(currentWorkspace.id).then((res) => {
+        if (res) {
+          setMembers(() => res);
+          const filteredUser = res.filter((member) => member.id === user.id)[0];
+          filteredUser && dispatch(setRole(filteredUser.role));
+        }
+      });
   }, [user.id]);
 
   useEffect(() => {
-    if (!!workspaceId) {
-      getWorkspaceInfo(workspaceId).then((res) => {
-        dispatch(fetchWorkspaceInfo(workspaceId));
-      });
+    if (!!currentWorkspace.id) {
+      getWorkspaceInfo(currentWorkspace.id).then(
+        (workspace: ResponseWorkspace) => {
+          workspace.id && dispatch(fetchWorkspaceInfo(workspace.id));
+        }
+      );
 
-      getWorkspaceChannels(workspaceId).then((res) => {
-        setChannels(() => res);
-        setSelectedChannel(() => res[0]);
+      getWorkspaceChannels(currentWorkspace.id).then((channels: Channel[]) => {
+        if (channels) {
+          setChannels(() => channels);
+          setSelectedChannel(() => channels[0]);
+        }
+      });
+    } else {
+      getWorkspaceInfo(workspaceId).then((workspace: ResponseWorkspace) => {
+        dispatch(fetchWorkspaceInfo(workspace.id));
       });
     }
-  }, []);
+  }, [currentWorkspace.id]);
 
   const handleDeleteMember = (memberId: number) => {
     setMembers((members) => members.filter((member) => member.id !== memberId));
+  };
+
+  const handleWorkspaceSwitch = (selectedWorkspaceId?: number) => {
+    if (selectedWorkspaceId) {
+      getWorkspaceInfo(selectedWorkspaceId).then((res) => {
+        dispatch(fetchWorkspaceInfo(selectedWorkspaceId));
+      });
+    } else {
+      if (workspaceListRef.current) {
+        setWorkspaceListPosition({
+          top:
+            workspaceListRef.current.offsetHeight +
+            workspaceListRef.current.offsetTop,
+          left: workspaceListRef.current.offsetLeft,
+        });
+      }
+    }
+    setIsWorkspaceListOpen((isWorkspaceListOpen) => !isWorkspaceListOpen);
   };
 
   const customStyles = {
@@ -240,9 +277,35 @@ function Home() {
     <div className="flex">
       {/* 맨 좌측 탭 */}
       <div className="w-24 min-h-screen flex flex-col justify-between bg-outerTab">
-        <div className="mx-auto mt-6 bg-white w-10 h-10 rounded-md  overflow-hidden">
-          <img src={workspace.profileImg ?? basic_img} alt="" />
+        <div
+          className="mx-auto mt-6 bg-white w-10 h-10 rounded-md  overflow-hidden cursor-pointer"
+          onClick={() => handleWorkspaceSwitch()}
+          ref={workspaceListRef}
+        >
+          <img src={currentWorkspace.profileImg ?? basic_img} alt="" />
         </div>
+        {
+          <DropdownMenu
+            isOpen={isWorkspaceListOpen}
+            style={{
+              top: workspaceListPosition.top,
+              left: workspaceListPosition.left,
+            }}
+          >
+            {user.myWorkspaces?.map((workspace, index) => {
+              return (
+                <DropdownItem
+                  key={workspace.id}
+                  id={workspace.id}
+                  isSelected={workspace.id === currentWorkspace.id}
+                  name={workspace.name}
+                  img={workspace.profileImg ?? basic_img}
+                  onClick={(id) => handleWorkspaceSwitch(id)}
+                ></DropdownItem>
+              );
+            })}
+          </DropdownMenu>
+        }
         <div className="mx-auto mb-6">
           <div
             className="bg-white inset-x-0 bottom-0 rounded-xl mb-6"
@@ -262,7 +325,9 @@ function Home() {
       <div className="w-72 min-h-screen flex flex-col justify-between bg-body py-6 px-4">
         <div>
           <div className="flex justify-between items-center w-[100%] h-[30px]">
-            <p className="text-xl font-bold text-white">{workspace.name}</p>
+            <p className="text-xl font-bold text-white">
+              {currentWorkspace.name}
+            </p>
             <div
               className="flex jusfify-center items-center h-[100%] cursor-pointer"
               onClick={toggleMenu}
@@ -396,17 +461,18 @@ function Home() {
       >
         {/* 각 Menu Options를 눌렀을 때 나오는 Modal. */}
         {selectedModal &&
+          currentWorkspace.id &&
           {
             "새 채널 만들기": (
               <CreateChannel
-                workspaceId={workspaceId}
+                workspaceId={currentWorkspace.id}
                 title={selectedModal}
                 closeModal={closeModal}
               />
             ),
             "워크스페이스 정보 수정": (
               <EditWorkspaceInfo
-                workspaceId={workspaceId}
+                workspaceId={currentWorkspace.id}
                 title={selectedModal}
                 closeModal={closeModal}
               />
@@ -415,7 +481,7 @@ function Home() {
               <ManageMembers
                 title={selectedModal}
                 closeModal={closeModal}
-                workspaceId={workspaceId}
+                workspaceId={currentWorkspace.id}
                 members={members}
                 isDeletedMember={(memberId: number) =>
                   handleDeleteMember(memberId)
@@ -424,7 +490,7 @@ function Home() {
             ),
             "초대링크 생성하기": (
               <CreateInvitationLink
-                workspaceId={workspaceId}
+                workspaceId={currentWorkspace.id}
                 title={selectedModal}
                 closeModal={closeModal}
               />
@@ -433,14 +499,14 @@ function Home() {
               <LeaveWorkspace
                 title={selectedModal}
                 closeModal={closeModal}
-                workspaceId={workspaceId}
+                workspaceId={currentWorkspace.id}
               />
             ),
             "워크스페이스 삭제": (
               <DeleteWorkspace
                 title={selectedModal}
                 closeModal={closeModal}
-                workspaceId={workspaceId}
+                workspaceId={currentWorkspace.id}
               />
             ),
           }[selectedModal]}
