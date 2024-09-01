@@ -90,9 +90,23 @@ function Home() {
   };
 
   useEffect(() => {
-    if (!user.id) getUserInfo().then((res) => dispatch(fetchUserInfo()));
+    if (!user.id) {
+      getUserInfo().then((res) => {
+        dispatch(fetchUserInfo());
+      });
+    }
+  }, [user.id]);
 
-    if (currentWorkspace.id)
+  useEffect(() => {
+    if (currentWorkspace.id !== workspaceId) {
+      getWorkspaceInfo(workspaceId ?? currentWorkspace.id).then(
+        (workspace: ResponseWorkspace) => {
+          dispatch(fetchWorkspaceInfo(workspace.id));
+        }
+      );
+    }
+
+    if (currentWorkspace.id) {
       getWorkspaceMembers(currentWorkspace.id).then((res) => {
         if (res) {
           setMembers(() => res);
@@ -100,15 +114,6 @@ function Home() {
           filteredUser && dispatch(setRole(filteredUser.role));
         }
       });
-  }, [user.id]);
-
-  useEffect(() => {
-    if (!!currentWorkspace.id) {
-      getWorkspaceInfo(currentWorkspace.id).then(
-        (workspace: ResponseWorkspace) => {
-          workspace.id && dispatch(fetchWorkspaceInfo(workspace.id));
-        }
-      );
 
       getWorkspaceChannels(currentWorkspace.id).then((channels: Channel[]) => {
         if (channels) {
@@ -116,12 +121,8 @@ function Home() {
           setSelectedChannel(() => channels[0]);
         }
       });
-    } else {
-      getWorkspaceInfo(workspaceId).then((workspace: ResponseWorkspace) => {
-        dispatch(fetchWorkspaceInfo(workspace.id));
-      });
     }
-  }, [currentWorkspace.id]);
+  }, [currentWorkspace.id, workspaceId]);
 
   useEffect(() => {
     if (!selectedChannel) return;
