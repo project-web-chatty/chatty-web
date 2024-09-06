@@ -88,23 +88,8 @@ function Home() {
       transform: "translate(-50%, -50%)",
     },
   };
-
   useEffect(() => {
-    if (!user.id) {
-      getUserInfo().then((res) => {
-        dispatch(fetchUserInfo());
-      });
-    }
-  }, [user.id]);
-
-  useEffect(() => {
-    if (currentWorkspace.id !== workspaceId) {
-      getWorkspaceInfo(workspaceId ?? currentWorkspace.id).then(
-        (workspace: ResponseWorkspace) => {
-          dispatch(fetchWorkspaceInfo(workspace.id));
-        }
-      );
-    }
+    dispatch(fetchUserInfo());
 
     if (currentWorkspace.id) {
       getWorkspaceMembers(currentWorkspace.id).then((res) => {
@@ -114,15 +99,82 @@ function Home() {
           filteredUser && dispatch(setRole(filteredUser.role));
         }
       });
+    }
+    localStorage.removeItem("CurrentWorkspaceId");
+  }, [user.id]);
 
-      getWorkspaceChannels(currentWorkspace.id).then((channels: Channel[]) => {
+  useEffect(() => {
+    let requestWorkspaceId;
+
+    if (currentWorkspace.id) {
+      requestWorkspaceId = currentWorkspace.id;
+    } else {
+      const isExistLocalstorageValue =
+        localStorage.getItem("CurrentWorkspaceId");
+
+      if (isExistLocalstorageValue) {
+        requestWorkspaceId = parseInt(isExistLocalstorageValue);
+      } else {
+        requestWorkspaceId = workspaceId;
+      }
+    }
+
+    dispatch(fetchWorkspaceInfo(requestWorkspaceId));
+    localStorage.setItem(
+      "CurrentWorkspaceId",
+      JSON.stringify(requestWorkspaceId)
+    );
+
+    getWorkspaceMembers(requestWorkspaceId).then((res) => {
+      if (res) {
+        setMembers(() => res);
+        const filteredUser = res.filter((member) => member.id === user.id)[0];
+        filteredUser && dispatch(setRole(filteredUser.role));
+        console.log(user);
+      }
+    });
+
+    getWorkspaceChannels(parseInt(requestWorkspaceId)).then(
+      (channels: Channel[]) => {
         if (channels) {
           setChannels(() => channels);
           setSelectedChannel(() => channels[0]);
         }
-      });
-    }
-  }, [currentWorkspace.id, workspaceId]);
+      }
+    );
+  }, [currentWorkspace.id]);
+
+  // useEffect(() => {
+  //   const savedWorkspaceId = localStorage.getItem("CurrentWorkspaceId");
+  //   if (!!savedWorkspaceId) {
+  //     getWorkspaceInfo(parseInt(savedWorkspaceId)).then(
+  //       (workspace: ResponseWorkspace) => {
+  //         dispatch(fetchWorkspaceInfo(workspace.id));
+  //       }
+  //     );
+
+  //     getWorkspaceMembers(parseInt(savedWorkspaceId)).then((res) => {
+  //       if (res) {
+  //         setMembers(() => res);
+  //         const filteredUser = res.filter((member) => member.id === user.id)[0];
+  //         filteredUser && dispatch(setRole(filteredUser.role));
+  //       }
+  //     });
+
+  //     getWorkspaceChannels(parseInt(savedWorkspaceId)).then(
+  //       (channels: Channel[]) => {
+  //         if (channels) {
+  //           setChannels(() => channels);
+  //           setSelectedChannel(() => channels[0]);
+  //         }
+  //       }
+  //     );
+  //   } else {
+  //     getWorkspaceInfo(workspaceId).then((workspace: ResponseWorkspace) => {
+  //       dispatch(fetchWorkspaceInfo(workspace.id));
+  //     });
+  //   }
+  // }, [localStorage.getItem("CurrentWorkspaceId")]);
 
   useEffect(() => {
     if (!selectedChannel) return;
