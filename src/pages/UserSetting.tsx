@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
+import { RootState } from "../store/store";
+import { useSelector } from "react-redux";
 import HomeLogo from "../assets/icon/icon_home.png";
 import MessageLogo from "../assets/icon/icon_message.png";
-import UserLogo from "../assets/icon/icon_profile-person.png";
-import ProfileImg from "../assets/icon/icon_profile-person.png";
+import IconUser from "../assets/icon/icon_user_black.svg";
 import ReactModal from "react-modal";
 import ButtonModal from "../components/ButtonModal";
 import PasswordEditingModal from "../components/PasswordEditingModal";
@@ -14,13 +15,14 @@ const apiClient = axios.create({
 });
 
 function UserSetting() {
+  const user = useSelector((state: RootState) => state.user); // 유저 상태 조회
+
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [modalSetting, setModalSetting] = useState("");
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [oldPassword, setOldPassword] = useState<string | undefined>();
   const [newPassword, setNewPassword] = useState<string | undefined>();
-
-  const navigate = useNavigate();
 
   useEffect(() => {
     // 로그인 상태 확인
@@ -142,24 +144,6 @@ function UserSetting() {
 
   return (
     <div className="flex">
-      <div className="w-24 h-screen fixed flex flex-col justify-between bg-outerTab">
-        <div className="mx-auto mt-6 bg-white w-10 h-10 rounded-md"></div>
-        <div className="mx-auto mb-6">
-          <div className="bg-white inset-x-0 bottom-0 rounded-xl mb-6">
-            <img className="w-10 h-10" src={MessageLogo} alt="메시지 로고" />
-          </div>
-          <img
-            className="inset-x-0 bottom-0 w-10 h-10 mb-6"
-            src={HomeLogo}
-            alt="홈 로고"
-          />
-          <img
-            className="inset-x-0 bottom-0 w-10 h-10"
-            src={UserLogo}
-            alt="사용자 로고"
-          />
-        </div>
-      </div>
       <div className="absolute left-24 flex flex-col gap-10 bg-chatting min-h-screen w-[calc(100%-96px)] py-9 px-11">
         <div className="min-w-[448px]">
           <h2 className="text-white font-bold text-4xl">My Account</h2>
@@ -168,7 +152,7 @@ function UserSetting() {
             <div id="picture" className="h-full bg-white mr-20">
               <img
                 className="h-full w-full max-w-52 min-w-40"
-                src={ProfileImg}
+                src={user.profileImg ?? IconUser}
                 alt="프로필 이미지"
               />
             </div>
@@ -181,15 +165,15 @@ function UserSetting() {
                   </div>
                   <h3 className="font-bold text-3xl min-w-52">NAME</h3>
                 </div>
-                <p>이진</p>
+                <p>{user.username}</p>
               </div>
               <div className="flex items-center">
                 <h3 className="font-bold text-3xl min-w-52">NICKNAME</h3>
-                <p>Lee Jin</p>
+                <p>{user.nickname}</p>
               </div>
               <div className="flex items-center">
                 <h3 className="font-bold text-3xl min-w-52">EMAIL</h3>
-                <p>abcd@gmail.com</p>
+                <p>{user.email ?? "-"}</p>
               </div>
             </div>
           </div>
