@@ -144,38 +144,6 @@ function Home() {
     );
   }, [currentWorkspace.id]);
 
-  // useEffect(() => {
-  //   const savedWorkspaceId = localStorage.getItem("CurrentWorkspaceId");
-  //   if (!!savedWorkspaceId) {
-  //     getWorkspaceInfo(parseInt(savedWorkspaceId)).then(
-  //       (workspace: ResponseWorkspace) => {
-  //         dispatch(fetchWorkspaceInfo(workspace.id));
-  //       }
-  //     );
-
-  //     getWorkspaceMembers(parseInt(savedWorkspaceId)).then((res) => {
-  //       if (res) {
-  //         setMembers(() => res);
-  //         const filteredUser = res.filter((member) => member.id === user.id)[0];
-  //         filteredUser && dispatch(setRole(filteredUser.role));
-  //       }
-  //     });
-
-  //     getWorkspaceChannels(parseInt(savedWorkspaceId)).then(
-  //       (channels: Channel[]) => {
-  //         if (channels) {
-  //           setChannels(() => channels);
-  //           setSelectedChannel(() => channels[0]);
-  //         }
-  //       }
-  //     );
-  //   } else {
-  //     getWorkspaceInfo(workspaceId).then((workspace: ResponseWorkspace) => {
-  //       dispatch(fetchWorkspaceInfo(workspace.id));
-  //     });
-  //   }
-  // }, [localStorage.getItem("CurrentWorkspaceId")]);
-
   useEffect(() => {
     if (!selectedChannel) return;
 
