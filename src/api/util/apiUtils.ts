@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import { config } from "process";
 import { CommonResponse } from "../../types/common";
-import { postRefreshToken } from "../auth";
+import { postRefreshToken } from "../auth/AuthAPI";
 
 export const axiosInstance: AxiosInstance = axios.create({
   baseURL: `${process.env.REACT_APP_API_URL}`,

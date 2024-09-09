@@ -4,7 +4,7 @@ import ReactModal from "react-modal";
 import { useDispatch, useSelector } from "react-redux";
 import ButtonModal from "../components/ButtonModal";
 import { useNavigate } from "react-router";
-import { postLogout, updatePassword } from "../api/auth";
+import { postLogout, updatePassword } from "../api/auth/AuthAPI";
 import { deleteAccount, updateUserInfo } from "../api/user/UserAPI";
 import { fetchUserInfo } from "../features/userSlice";
 import PasswordEditingModal from "../components/PasswordEditingModal";
