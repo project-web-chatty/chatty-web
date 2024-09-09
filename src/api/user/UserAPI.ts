@@ -67,6 +67,29 @@ const workSpaceService = {
       console.log(response.data.message);
     }
   },
+
+  /**
+   * Api to delete account
+   */
+  deleteAccount: async () => {
+    console.log("Deleting account...");
+
+    try {
+      const response = await Delete(`/me`);
+
+      if (response.data.isSuccess) {
+        sessionStorage.clear();
+
+        // document.cookie =  "refreshToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; Secure;";
+
+        return response.data.isSuccess;
+      } else {
+        console.error("Delete account failed: ", response.data.message);
+      }
+    } catch (err) {
+      console.error("Delete account failed: ", err);
+    }
+  },
 };
 
 export const {
@@ -74,4 +97,5 @@ export const {
   updateUserProfileImg,
   leaveWorkspace,
   updateUserInfo,
+  deleteAccount,
 } = workSpaceService;

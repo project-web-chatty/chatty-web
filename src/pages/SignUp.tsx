@@ -89,7 +89,7 @@ const SignUp: React.FC = () => {
   // 회원가입 완료
   const handleSignUp = async () => {
     try {
-      const response = await apiClient.post("/api/member/signup", {
+      const response = await apiClient.post("/member/signup", {
         username,
         password,
       });

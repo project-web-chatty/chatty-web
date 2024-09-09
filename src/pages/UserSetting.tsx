@@ -2,20 +2,15 @@ import { useState, useEffect } from "react";
 import { AppDispatch, RootState } from "../store/store";
 import ReactModal from "react-modal";
 import { useDispatch, useSelector } from "react-redux";
-import axios from "axios";
 import ButtonModal from "../components/ButtonModal";
 import { useNavigate } from "react-router";
-import { postLogout } from "../api/auth";
-import { updateUserInfo } from "../api/user/UserAPI";
+import { postLogout, updatePassword } from "../api/auth/AuthAPI";
+import { deleteAccount, updateUserInfo } from "../api/user/UserAPI";
 import { fetchUserInfo } from "../features/userSlice";
 import PasswordEditingModal from "../components/PasswordEditingModal";
 import UploadUserProfileModal from "../components/Modals/UploadUserProfileModal";
 import IconUser from "../assets/icon/icon_user_black.svg";
 import IconPencil from "../assets/icon/icon_pencil.png";
-
-const apiClient = axios.create({
-  baseURL: `${process.env.REACT_APP_BASE_URL}`,
-});
 
 function UserSetting() {
   const dispatch = useDispatch<AppDispatch>();
@@ -102,59 +97,30 @@ function UserSetting() {
   /**
    * Logout
    */
-  const logoutHandler = async () => {
+  const logoutHandler = () => {
     postLogout().then((res) => {
       if (res) navigate("/");
     });
   };
 
-  // 계정 삭제
-  const deleteAccountHandler = async () => {
-    console.log("Deleting account...");
-    const accessToken = sessionStorage.getItem("accessToken");
-    try {
-      const response = await apiClient.delete(`/api/me`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`, // 토큰을 헤더에 추가
-        },
-      });
-
-      if (response.data.isSuccess) {
-        // Access token 삭제
-        sessionStorage.removeItem("access_token");
-
-        // 쿠키에서 refreshToken 제거
-        document.cookie =
-          "refreshToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; Secure;";
-
-        // 로그아웃 후 리디렉션
-        navigate("/");
-      } else {
-        console.error("Logout failed: ", response.data.message);
-      }
-    } catch (err) {
-      console.error("Logout failed: ", err);
-    }
+  /**
+   * Delete account
+   */
+  const deleteAccountHandler = () => {
+    deleteAccount().then((res) => {
+      if (res) navigate("/");
+    });
   };
 
-  const openPasswordModal = () => {
-    setIsPasswordModalOpen(true);
-  };
-
-  const closePasswordModal = () => {
-    setIsPasswordModalOpen(false);
-  };
-
-  // 비밀번호 변경
+  /**
+   * Update password
+   */
   const passwordChangeHandler = async () => {
-    console.log("Changing password...");
-    try {
-      const response = await apiClient.post(`/api/auth/password`, {
-        oldPassword,
-        newPassword,
-      });
-      closePasswordModal();
-    } catch {}
+    if (!oldPassword || !newPassword) return;
+
+    updatePassword(oldPassword, newPassword).then((res) => {
+      if (res) setIsPasswordModalOpen(false);
+    });
   };
 
   const customStyles = {
@@ -288,7 +254,7 @@ function UserSetting() {
           <button
             type="button"
             className="h-12 w-full rounded-lg bg-white p-2 hover:bg-opacity-50 drop-shadow-lg border-2 border-black font-semibold"
-            onClick={openPasswordModal}
+            onClick={() => setIsPasswordModalOpen((prev) => !prev)}
           >
             비밀번호 변경하기
           </button>
@@ -330,11 +296,11 @@ function UserSetting() {
             <ReactModal
               appElement={document.getElementById("root") as HTMLElement}
               isOpen={isPasswordModalOpen}
-              onRequestClose={closePasswordModal}
+              onRequestClose={() => setIsPasswordModalOpen(false)}
               style={customStyles}
             >
               <PasswordEditingModal
-                closeModal={closePasswordModal}
+                closeModal={() => setIsPasswordModalOpen(false)}
                 setting="비밀번호 수정"
                 onConfirm={passwordChangeHandler}
               />

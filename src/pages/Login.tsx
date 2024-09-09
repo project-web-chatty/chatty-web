@@ -5,7 +5,7 @@ import logo_google from "../assets/logo/logo_google.png";
 import logo_github from "../assets/logo/logo_github.png";
 import { RootState, AppDispatch } from "../store/store";
 import { RequestLoginParams } from "../types/auth";
-import { loginApi } from "../api/auth";
+import { loginApi } from "../api/auth/AuthAPI";
 
 const Login: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>(); // AppDispatch 타입 지정
