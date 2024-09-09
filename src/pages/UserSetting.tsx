@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import ButtonModal from "../components/ButtonModal";
 import { useNavigate } from "react-router";
+import { postLogout } from "../api/auth";
 import { updateUserInfo } from "../api/user/UserAPI";
 import { fetchUserInfo } from "../features/userSlice";
 import PasswordEditingModal from "../components/PasswordEditingModal";
@@ -41,11 +42,17 @@ function UserSetting() {
     dispatch(fetchUserInfo());
   }, []);
 
+  /**
+   * Edit user's profile image
+   */
   const handleImageClick = () => {
     setIsProfileUploadModalOpen(true);
     setIsProfileHovered(false);
   };
 
+  /**
+   * Edit user's info
+   */
   const handleActiveInput = (target: "nickname" | "introduction") => {
     setInputValue("");
 
@@ -59,7 +66,6 @@ function UserSetting() {
         setIsEditingNickname(false);
     }
   };
-
   const handleUserInfoChange = (target: "nickname" | "introduction") => {
     if (!inputValue) return;
 
@@ -93,38 +99,13 @@ function UserSetting() {
     setModalSetting("");
   };
 
-  // 로그아웃
+  /**
+   * Logout
+   */
   const logoutHandler = async () => {
-    console.log("Logging out...");
-
-    const accessToken = sessionStorage.getItem("accessToken");
-    try {
-      const response = await apiClient.post(
-        `/api/auth/logout`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
-      );
-
-      if (response.data.isSuccess) {
-        // Access token 삭제
-        sessionStorage.removeItem("accessToken");
-
-        // 쿠키에서 refreshToken 제거
-        document.cookie =
-          "refreshToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; Secure;";
-
-        // 로그아웃 후 리디렉션
-        navigate("/");
-      } else {
-        console.error("Logout failed: ", response.data.message);
-      }
-    } catch (err) {
-      console.error("Logout failed: ", err);
-    }
+    postLogout().then((res) => {
+      if (res) navigate("/");
+    });
   };
 
   // 계정 삭제

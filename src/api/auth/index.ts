@@ -47,6 +47,27 @@ const authService = {
 
     return accessToken;
   },
+
+  /**
+   * Request logout
+   */
+  postLogout: async () => {
+    try {
+      const response = await Post("/auth/logout");
+
+      if (response.data.isSuccess) {
+        sessionStorage.removeItem("accessToken");
+        sessionStorage.removeItem("refreshToken");
+        // document.cookie = "refreshToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; Secure;";
+
+        return response.data.isSuccess;
+      } else {
+        console.error("Logout failed: ", response.data.message);
+      }
+    } catch (err) {
+      console.error("Logout failed: ", err);
+    }
+  },
 };
 
-export const { loginApi, postRefreshToken } = authService;
+export const { loginApi, postRefreshToken, postLogout } = authService;
