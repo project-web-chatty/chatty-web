@@ -52,33 +52,42 @@ axiosInstance.interceptors.response.use(
     if (response.status === 400) {
       const customErrorCode = response.data.code;
 
-      // 4053 : 토큰 만료 에러 처리
-      if (response.data.code === 4053) {
-        if (!isRefreshing) {
-          isRefreshing = true;
+      switch (customErrorCode) {
+        case 4053: // AUTH_EXPIRED_TOKEN(BAD_REQUEST, 4053, "토큰의 유효기간이 만료되었습니다.")
+          if (!isRefreshing) {
+            isRefreshing = true;
 
-          try {
-            const newAccessToken = await postRefreshToken();
-            isRefreshing = false;
-            onRrefreshed(newAccessToken);
-          } catch (refreshError) {
-            isRefreshing = false;
+            try {
+              const newAccessToken = await postRefreshToken();
+              isRefreshing = false;
+              onRrefreshed(newAccessToken);
+            } catch (refreshError) {
+              isRefreshing = false;
 
-            return Promise.reject(refreshError);
+              return Promise.reject(refreshError);
+            }
           }
-        }
 
-        return new Promise((resolve) => {
-          addRefreshSubscriber((newAccessToken: string) => {
-            originalRequest.headers["Authorization"] =
-              `Bearer ${newAccessToken}`;
-            resolve(axiosInstance(originalRequest));
+          return new Promise((resolve) => {
+            addRefreshSubscriber((newAccessToken: string) => {
+              originalRequest.headers["Authorization"] =
+                `Bearer ${newAccessToken}`;
+              resolve(axiosInstance(originalRequest));
+            });
           });
-        });
-      } else {
-        sessionStorage.removeItem("accessToken");
-        sessionStorage.removeItem("refreshToken");
-        window.location.href = "/";
+          break;
+        case 4050: // AUTH_NULL_TOKEN(BAD_REQUEST,4050,"헤더에 토큰이 없습니다")
+        case 4051: // AUTH_INVALID_TOKEN(BAD_REQUEST, 4051, "검증 결과 잘못된 토큰입니다."),
+        case 4052: // AUTH_OUTDATED_REFRESH_TOKEN(BAD_REQUEST,4052,"갱신되기 이전의 리프레시 토큰입니다.")
+        case 4054: // AUTH_TYPE_MISMATCH_TOKEN(BAD_REQUEST,4054,"토큰의 타입이 맞지 않습니다.")
+        case 4055: // AUTH_UNAUTHORIZED_ACCESS(FORBIDDEN,4055,"인증되었으나 해당 요청에 대한 권한이 부족합니다.")
+        case 4056: // AUTH_FAIL_LOGIN(FORBIDDEN,4056,"아이디 또는 비밀번호를 잘못 입력하였습니다.")
+        case 4057: // AUTH_FAIL_PASSWORD_MATCHING(BAD_REQUEST,4057,"비밀번호가 올바르지 않습니다.")
+          sessionStorage.removeItem("accessToken");
+          sessionStorage.removeItem("refreshToken");
+          window.location.href = "/";
+          break;
+        default:
       }
     }
     return Promise.reject(error);

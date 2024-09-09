@@ -1,36 +1,87 @@
 import { useState, useEffect } from "react";
-import { RootState } from "../store/store";
-import { useSelector } from "react-redux";
-import HomeLogo from "../assets/icon/icon_home.png";
-import MessageLogo from "../assets/icon/icon_message.png";
-import IconUser from "../assets/icon/icon_user_black.svg";
+import { AppDispatch, RootState } from "../store/store";
 import ReactModal from "react-modal";
-import ButtonModal from "../components/ButtonModal";
-import PasswordEditingModal from "../components/PasswordEditingModal";
+import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
+import ButtonModal from "../components/ButtonModal";
 import { useNavigate } from "react-router";
+import { updateUserInfo } from "../api/user/UserAPI";
+import { fetchUserInfo } from "../features/userSlice";
+import PasswordEditingModal from "../components/PasswordEditingModal";
+import UploadUserProfileModal from "../components/Modals/UploadUserProfileModal";
+import IconUser from "../assets/icon/icon_user_black.svg";
+import IconPencil from "../assets/icon/icon_pencil.png";
 
 const apiClient = axios.create({
   baseURL: `${process.env.REACT_APP_BASE_URL}`,
 });
 
 function UserSetting() {
+  const dispatch = useDispatch<AppDispatch>();
   const user = useSelector((state: RootState) => state.user); // 유저 상태 조회
 
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [modalSetting, setModalSetting] = useState("");
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [isProfileUploadModalOpen, setIsProfileUploadModalOpen] =
+    useState(false);
   const [oldPassword, setOldPassword] = useState<string | undefined>();
   const [newPassword, setNewPassword] = useState<string | undefined>();
 
+  const [isProfileHovered, setIsProfileHovered] = useState(false);
+
+  const [isEditingNickname, setIsEditingNickname] = useState(false);
+  const [isEditingIntroduction, setIsEditingIntroduction] = useState(false);
+  const [inputValue, setInputValue] = useState("");
+
+  const userFields = ["name", "nickname", "introduction"];
+
   useEffect(() => {
-    // 로그인 상태 확인
-    const accessToken = sessionStorage.getItem("accessToken");
-    if (!accessToken) {
-      navigate("/"); // 로그인 페이지로 리디렉션
+    dispatch(fetchUserInfo());
+  }, []);
+
+  const handleImageClick = () => {
+    setIsProfileUploadModalOpen(true);
+    setIsProfileHovered(false);
+  };
+
+  const handleActiveInput = (target: "nickname" | "introduction") => {
+    setInputValue("");
+
+    switch (target) {
+      case "nickname":
+        setIsEditingIntroduction(false);
+        setIsEditingNickname(true);
+        break;
+      case "introduction":
+        setIsEditingIntroduction(true);
+        setIsEditingNickname(false);
     }
-  }, [navigate]);
+  };
+
+  const handleUserInfoChange = (target: "nickname" | "introduction") => {
+    if (!inputValue) return;
+
+    switch (target) {
+      case "nickname":
+        setIsEditingNickname(false);
+        updateUserInfo({ nickname: inputValue }).then((res) => {
+          if (res) {
+            dispatch(fetchUserInfo());
+          }
+        });
+
+        break;
+      case "introduction":
+        setIsEditingIntroduction(false);
+        updateUserInfo({ introduction: inputValue }).then((res) => {
+          if (res) {
+            dispatch(fetchUserInfo());
+          }
+        });
+    }
+  };
 
   const openModal = (setting: string) => {
     setModalSetting(setting);
@@ -149,35 +200,107 @@ function UserSetting() {
           <h2 className="text-white font-bold text-4xl">My Account</h2>
           <div className="border border-white w-full my-5"></div>
           <div className="flex bg-lightGray rounded-lg p-12">
-            <div id="picture" className="h-full bg-white mr-20">
-              <img
-                className="h-full w-full max-w-52 min-w-40"
-                src={user.profileImg ?? IconUser}
-                alt="프로필 이미지"
-              />
+            <div className="relative flex flex-col items-center justify-center gap-4 mr-20">
+              <div
+                id="picture"
+                className="w-[200px] h-[200px] bg-white flex items-center justify-center overflow-hidden rounded-md cursor-pointer"
+                onMouseEnter={() => setIsProfileHovered(true)}
+                onMouseLeave={() => setIsProfileHovered(false)}
+                onClick={handleImageClick}
+              >
+                <img
+                  src={user.profileImg ?? IconUser}
+                  alt="Profile"
+                  className={`w-full h-full object-cover transition ${
+                    isProfileHovered ? "brightness-50" : ""
+                  }`}
+                />
+              </div>
+              {isProfileHovered && (
+                <span className="absolute flex items-center justify-center text-white pointer-events-none">
+                  이미지 업로드
+                </span>
+              )}
             </div>
-            <div className="flex flex-col justify-between">
-              <div className="flex items-center">
-                <div>
-                  <div className="flex items-center">
-                    <div className="w-[8px] h-[8px] bg-green rounded-[50%] mr-1"></div>
-                    <div className="text-[10px]">Online</div>
+
+            <div className="flex flex-col justify-between w-full my-2">
+              <div className="flex justify-between items-center gap-4">
+                <h3 className="font-bold text-3xl min-w-[230px]">NAME</h3>
+                <span className="grow pl-4">{user.username}</span>
+              </div>
+              <div className="flex justify-between items-center gap-4 w-full">
+                <h3 className="font-bold text-3xl min-w-[230px]">NICKNAME</h3>
+                {!isEditingNickname ? (
+                  <>
+                    <span className="grow pl-4">{user.nickname}</span>
+                    <button
+                      className="text-gray-500 w-6 h-6 hover:text-gray-700"
+                      onClick={() => handleActiveInput("nickname")}
+                    >
+                      <img src={IconPencil} alt="" className="w-6 h-6" />
+                    </button>
+                  </>
+                ) : (
+                  <div className="flex p-2 bg-slate-200 rounded-md grow">
+                    <input
+                      className="max-w-full grow px-2 bg-slate-200 focus:outline-none"
+                      type="text"
+                      placeholder={user.nickname ?? ""}
+                      value={inputValue}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        setInputValue(e.target.value)
+                      }
+                    />
+                    <button
+                      className={`w-max px-4 rounded-md text-white ${inputValue ? "bg-slate-600 hover:bg-opacity-50" : "bg-slate-400"}`}
+                      onClick={() => handleUserInfoChange("nickname")}
+                      disabled={!inputValue}
+                    >
+                      완료
+                    </button>
                   </div>
-                  <h3 className="font-bold text-3xl min-w-52">NAME</h3>
-                </div>
-                <p>{user.username}</p>
+                )}
               </div>
-              <div className="flex items-center">
-                <h3 className="font-bold text-3xl min-w-52">NICKNAME</h3>
-                <p>{user.nickname}</p>
-              </div>
-              <div className="flex items-center">
-                <h3 className="font-bold text-3xl min-w-52">EMAIL</h3>
-                <p>{user.email ?? "-"}</p>
+              <div className="flex justify-between items-center gap-4">
+                <h3 className="font-bold text-3xl min-w-[230px]">
+                  INTRODUCTION
+                </h3>
+                {!isEditingIntroduction ? (
+                  <>
+                    <span className="grow pl-4">
+                      {user.introduction ?? "-"}
+                    </span>
+                    <button
+                      className="text-gray-500 w-6 h-6 hover:text-gray-700"
+                      onClick={() => handleActiveInput("introduction")}
+                    >
+                      <img src={IconPencil} alt="" className="w-6 h-6" />
+                    </button>
+                  </>
+                ) : (
+                  <div className="flex p-2 bg-slate-200 rounded-md grow">
+                    <input
+                      className="max-w-full grow px-2 bg-slate-200 focus:outline-none"
+                      type="text"
+                      placeholder={user.introduction ?? ""}
+                      value={inputValue}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        setInputValue(e.target.value)
+                      }
+                    />
+                    <button
+                      className="w-max px-4 bg-slate-600 rounded-md text-white hover:bg-opacity-50"
+                      onClick={() => handleUserInfoChange("introduction")}
+                    >
+                      완료
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
+
         <div className="max-w-md">
           <h2 className="text-white font-bold text-4xl">Password</h2>
           <div className="border border-white w-full my-5"></div>
@@ -233,6 +356,18 @@ function UserSetting() {
                 closeModal={closePasswordModal}
                 setting="비밀번호 수정"
                 onConfirm={passwordChangeHandler}
+              />
+            </ReactModal>
+
+            {/* User Profile Img 업로드 */}
+            <ReactModal
+              appElement={document.getElementById("root") as HTMLElement}
+              isOpen={isProfileUploadModalOpen}
+              onRequestClose={() => setIsProfileUploadModalOpen(false)}
+              style={customStyles}
+            >
+              <UploadUserProfileModal
+                closeModal={() => setIsProfileUploadModalOpen(false)}
               />
             </ReactModal>
           </div>
