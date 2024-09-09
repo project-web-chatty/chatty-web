@@ -1,6 +1,5 @@
-import { useNavigate } from "react-router";
 import { Post } from "../util/apiUtils";
-import { RequestLoginParams, ResponseLogin } from "./../../types/auth.d";
+import { RequestLoginParams, ResponseLogin } from "../../types/auth";
 const authService = {
   /**
    * This function sends a login request to the server.
@@ -56,8 +55,7 @@ const authService = {
       const response = await Post("/auth/logout");
 
       if (response.data.isSuccess) {
-        sessionStorage.removeItem("accessToken");
-        sessionStorage.removeItem("refreshToken");
+        sessionStorage.clear();
         // document.cookie = "refreshToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; Secure;";
 
         return response.data.isSuccess;
@@ -68,6 +66,27 @@ const authService = {
       console.error("Logout failed: ", err);
     }
   },
+
+  /**
+   * Request change password
+   */
+  updatePassword: async (oldPassword: string, newPassword: string) => {
+    try {
+      const response = await Post(`auth/password`, {
+        oldPassword,
+        newPassword,
+      });
+
+      if (response.data.isSuccess) {
+        return response.data.isSuccess;
+      } else {
+        console.error("Update password failed : ", response.data.message);
+      }
+    } catch (err) {
+      console.error("Update password failed : ", err);
+    }
+  },
 };
 
-export const { loginApi, postRefreshToken, postLogout } = authService;
+export const { loginApi, postRefreshToken, postLogout, updatePassword } =
+  authService;
