@@ -1,5 +1,5 @@
 import SockJS from "sockjs-client";
-import { Stomp } from "@stomp/stompjs";
+import { CompatClient, IMessage, Stomp } from "@stomp/stompjs";
 import ReactModal from "react-modal";
 import { useLocation } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
@@ -68,7 +68,9 @@ function Chat() {
   const [isMenuOpen, setMenuOpen] = useState(false);
   const [isComposing, setIsComposing] = useState<boolean>(false); //조합상태감지를 위한 상태변수. 조합문자란, 아직 완성되지 않은 문자로, 여러 키 입력이 조합되어 최종문자가 만들어지는 과정을 말함(한글, 중국어, 일본어 등). isComposing이 적용되지 않으면, 채팅을 엔터로 입력 시, 마지막 글자가 중복되서 한번 더 채팅으로 보내짐.
   const [selectedModal, setSelectedModal] = useState<string | null>(null);
-  const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
+  const [currentChannel, setCurrentChannel] = useState<Channel | null>(null);
+
+  const [stompClient, setStompClient] = useState<CompatClient | null>(null);
 
   useEffect(() => {
     dispatch(fetchUserInfo());
@@ -120,41 +122,43 @@ function Chat() {
       (channels: Channel[]) => {
         if (channels) {
           setChannels(() => channels);
-          setSelectedChannel(() => channels[0]);
+          setCurrentChannel(() => channels[0]);
         }
       }
     );
   }, [currentWorkspace.id]);
 
   useEffect(() => {
-    if (!selectedChannel) return;
+    if (!currentChannel) return;
 
     const token = sessionStorage.getItem("accessToken");
 
     const sockJS = new SockJS("http://localhost:8080/stomp/chat");
-    const stomp = Stomp.over(sockJS);
+    const client = Stomp.over(sockJS);
 
-    stomp.heartbeat.outgoing = 0;
-    stomp.heartbeat.incoming = 0;
+    client.heartbeat.outgoing = 0;
+    client.heartbeat.incoming = 0;
 
     const headers = {
       Authorization: `Bearer ${token}`,
-      channelId: selectedChannel.id,
+      channelId: currentChannel.id,
     };
 
     const onConnect = (frame: any) => {
       console.log("Connected: ", frame);
+      subscribeToRoom(client, currentChannel.id);
+      setStompClient(client);
     };
 
     const onError = (error: Error) => {
       console.error("Connection error:", error);
     };
 
-    stomp.activate();
-    stomp.connect(headers, onConnect, onError);
+    client.activate();
+    client.connect(headers, onConnect, onError);
 
     return () => {
-      stomp.disconnect(() => {
+      client.disconnect(() => {
         console.log("Disconnected from the server");
       });
     };
@@ -173,7 +177,19 @@ function Chat() {
     //       console.log(message);
     //     }
     //   );
-  }, [selectedChannel?.id]);
+  }, [currentChannel?.id]);
+
+  const subscribeToRoom = (client: CompatClient, roomId: number) => {
+    client.subscribe(`/topic/channel.${roomId}`, (message: IMessage) => {
+      if (message.body) {
+        setMessages((prevMessages: Message[]) => [
+          ...prevMessages,
+          JSON.parse(message.body),
+        ]);
+      }
+      console.log(message);
+    });
+  };
 
   //messages 상태가 변경될 때마다 chatEndRef를 이용해 스크롤을 끝으로 이동
   useEffect(() => {
@@ -185,20 +201,18 @@ function Chat() {
   };
 
   const sendMessage = (message: string) => {
-    if (selectedChannel) {
+    if (currentChannel) {
       // TODO : 메세지 형식 변경됨에 따라 추가수정 필요(아래 형식은 임시로 사용한다고 함)
       // const chatMessage = {
-      //   id: selectedChannel.id,
+      //   id: currentChannel.id,
       //   senderNickname: user.nickname,
       //   senderUsername: user.username,
       //   content: message,
       // };
-
       // client.publish({
       //   destination: `/pub/chat.message.${selectedChannel.id}`,
       //   body: JSON.stringify(chatMessage),
       // });
-
       setInput("");
     }
   };
@@ -217,7 +231,7 @@ function Chat() {
   };
 
   const handleChannelChange = (selectedChannel: Channel) => {
-    setSelectedChannel(() => selectedChannel);
+    setCurrentChannel(() => selectedChannel);
   };
 
   //키다운 핸들러(Enter 키 입력 시 메세지 전송)
@@ -273,7 +287,7 @@ function Chat() {
           >
             {channels?.map((channel, i) => (
               <div
-                className={`flex justify-between p-3 rounded ${channel.name === selectedChannel?.name ? "bg-slate-600" : "hover:bg-slate-700 cursor-pointer"}`}
+                className={`flex justify-between p-3 rounded ${channel.name === currentChannel?.name ? "bg-slate-600" : "hover:bg-slate-700 cursor-pointer"}`}
                 key={channel.id}
                 onClick={() => handleChannelChange(channel)}
               >
@@ -296,7 +310,7 @@ function Chat() {
       >
         <div className="flex justify-between items-center pb-6">
           <p className="text-xl font-bold text-white">
-            # {selectedChannel?.name}
+            # {currentChannel?.name}
           </p>
           <img className="w-5 h-5" src={IconSearch} alt="" />
         </div>
