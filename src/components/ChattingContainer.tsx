@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import IconUser from "../assets/icon/icon_user_black.svg";
 
 //ChattingContainer 컴포넌트 정의
 function ChattingContainer({ nickname, profile, chatting, time, isMe }: any) {
@@ -20,6 +21,17 @@ function ChattingContainer({ nickname, profile, chatting, time, isMe }: any) {
     ));
   };
 
+  const convertTimeFormat = () => {
+    const utcDate = new Date(time);
+    utcDate.setHours(utcDate.getHours() + 9);
+
+    return utcDate.toLocaleTimeString("ko-KR", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
+
   return (
     <>
       {isMe ? (
@@ -39,18 +51,18 @@ function ChattingContainer({ nickname, profile, chatting, time, isMe }: any) {
           </div>
           <img
             id="profile"
-            className="w-10 h-10 rounded-md"
-            src={profile}
-            alt=""
+            src={IconUser}
+            alt="Profile"
+            className="w-6 h-6 rounded-3xl bg-white"
           />
         </div>
       ) : (
         <div id="you" className="flex my-5">
           <img
             id="profile"
-            className="w-10 h-10 rounded-md"
-            src={profile}
-            alt=""
+            src={IconUser}
+            alt="Profile"
+            className="w-6 h-6 rounded-3xl bg-white"
           />
           <div className="ml-3">
             <p id="nickname" className="text-xs text-white">
@@ -63,7 +75,7 @@ function ChattingContainer({ nickname, profile, chatting, time, isMe }: any) {
             </div>
           </div>
           <div id="time" className="flex flex-col justify-end ml-3">
-            <p className="text-xs text-black">{time}</p>
+            <p className="text-xs text-black">{convertTimeFormat()}</p>
           </div>
         </div>
       )}
