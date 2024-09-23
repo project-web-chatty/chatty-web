@@ -27,16 +27,8 @@ import EditWorkspaceInfo from "../components/Modals/EditWorkspaceInfoModal";
 import CreateInvitationLink from "../components/Modals/CreateInvitationLinkModal";
 import { fetchWorkspaceInfo } from "../features/workspaceSlice";
 import { fetchUserInfo, setRole } from "../features/userSlice";
-
-// TODO : Response타입 정해지면 수정 필요. (현재는 임시)
-interface Message {
-  id: number | null;
-  channelId: number;
-  senderNickname: string;
-  senderUsername: string;
-  content: string;
-  regDate: any;
-}
+import { getMessages } from "../api/chat/ChatAPI";
+import { Message } from "../types/channel";
 
 const customStyles = {
   overlay: {
@@ -139,11 +131,6 @@ function Chat() {
     client.heartbeat.outgoing = 0;
     client.heartbeat.incoming = 0;
 
-    const headers = {
-      Authorization: `Bearer ${token}`,
-      channelId: currentChannel.id,
-    };
-
     const onConnect = (frame: any) => {
       console.log("Connected: ", frame);
       subscribeToRoom(client, currentChannel.id);
@@ -155,39 +142,35 @@ function Chat() {
     };
 
     client.activate();
-    client.connect(headers, onConnect, onError);
+    client.connect(
+      {
+        Authorization: `Bearer ${token}`,
+        channelId: currentChannel.id,
+      },
+      onConnect,
+      onError
+    );
 
     return () => {
       client.disconnect(() => {
         console.log("Disconnected from the server");
       });
     };
-
-    //   setMessages(() => []); // TODO : 채팅내역 데이터 받아와서 담아주기
-
-    //   stompClient.subscribe(
-    //     `/topic/channel.${selectedChannel.id}`,
-    //     (message: IMessage) => {
-    //       if (message.body) {
-    //         setMessages((prevMessages: Message[]) => [
-    //           ...prevMessages,
-    //           JSON.parse(message.body),
-    //         ]);
-    //       }
-    //       console.log(message);
-    //     }
-    //   );
   }, [currentChannel?.id]);
 
   const subscribeToRoom = (client: CompatClient, roomId: number) => {
-    client.subscribe(`/topic/channel.${roomId}`, (message: IMessage) => {
+    setMessages(() => []);
+    getMessages(roomId).then((res: Message[]) => {
+      setMessages(res);
+    });
+
+    client.subscribe(`/topic/channel.${roomId}`, (message: any) => {
       if (message.body) {
         setMessages((prevMessages: Message[]) => [
           ...prevMessages,
           JSON.parse(message.body),
         ]);
       }
-      console.log(message);
     });
   };
 
@@ -201,18 +184,22 @@ function Chat() {
   };
 
   const sendMessage = (message: string) => {
-    if (currentChannel) {
-      // TODO : 메세지 형식 변경됨에 따라 추가수정 필요(아래 형식은 임시로 사용한다고 함)
-      // const chatMessage = {
-      //   id: currentChannel.id,
-      //   senderNickname: user.nickname,
-      //   senderUsername: user.username,
-      //   content: message,
-      // };
-      // client.publish({
-      //   destination: `/pub/chat.message.${selectedChannel.id}`,
-      //   body: JSON.stringify(chatMessage),
-      // });
+    if (stompClient && message && currentChannel) {
+      const messageDto = {
+        id: null,
+        channelId: currentChannel.id,
+        content: message,
+      };
+
+      stompClient.send(
+        `/pub/chat.message`,
+        {
+          Authorization: `Bearer ${sessionStorage.getItem("accessToken")}`,
+          channelId: currentChannel.id,
+        },
+        JSON.stringify(messageDto)
+      );
+
       setInput("");
     }
   };

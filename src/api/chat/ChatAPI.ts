@@ -1,8 +1,9 @@
+import { Message } from "../../types/channel";
 import { Get } from "../util/apiUtils";
 
 const chatService = {
   getMessages: async (channelId: number) => {
-    const response = await Get(`chat/${channelId}`);
+    const response = await Get<Message[]>(`chat/${channelId}`);
 
     return response.data.result;
   },
