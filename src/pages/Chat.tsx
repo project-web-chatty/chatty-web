@@ -113,11 +113,12 @@ function Chat() {
     const sockJS = new SockJS("http://localhost:8080/stomp/chat");
     const client = Stomp.over(sockJS);
 
+    client.debug = () => {};
     client.heartbeat.outgoing = 0;
     client.heartbeat.incoming = 0;
 
     const onConnect = (frame: any) => {
-      console.log("Connected: ", frame);
+      console.log("Connected! ");
       subscribeToRoom(client, currentChannel.id);
       setStompClient(client);
     };
@@ -208,9 +209,11 @@ function Chat() {
 
   //키다운 핸들러(Enter 키 입력 시 메세지 전송)
   const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey && !isComposing && !!input.length) {
+    if (e.key === "Enter" && !e.shiftKey && !isComposing) {
+      if (input.trim()) {
+        sendMessage(input);
+      }
       e.preventDefault();
-      sendMessage(input);
     }
   };
 
@@ -291,20 +294,16 @@ function Chat() {
           className="px-2 overflow-y-auto"
           style={{ height: "calc(100vh - 172px)" }}
         >
-          {messages.map(
-            ({ id, senderUsername, senderNickname, content, regDate }) => (
-              <>
-                <ChattingContainer // TODO : 추후 response타입 변경에 따라 수정 필요.
-                  key={id}
-                  nickname={senderNickname}
-                  profile=""
-                  chatting={content}
-                  time={regDate}
-                  isMe={user.nickname === senderNickname}
-                />
-              </>
-            )
-          )}
+          {messages.map((message: Message, index) => (
+            <ChattingContainer
+              key={message.id}
+              nickname={message.senderNickname}
+              profile=""
+              chatting={message.content}
+              time={message.regDate}
+              isMe={user.nickname === message.senderNickname}
+            />
+          ))}
           <div ref={chatEndRef}></div>
         </div>
         <div className="w-full h-12 bg-white flex items-center justify-between mt-6 rounded-lg px-3">
