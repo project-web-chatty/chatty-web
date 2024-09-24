@@ -34,9 +34,7 @@ const NavBarComponent: React.FC<NavBarProps> = ({
 
   const handleWorkspaceSwitch = (selectedWorkspaceId?: number) => {
     if (selectedWorkspaceId) {
-      getWorkspaceInfo(selectedWorkspaceId).then((res) => {
-        dispatch(fetchWorkspaceInfo(selectedWorkspaceId));
-      });
+      dispatch(fetchWorkspaceInfo(selectedWorkspaceId));
     } else {
       if (workspaceListRef.current) {
         setWorkspaceListPosition({

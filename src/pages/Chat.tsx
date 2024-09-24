@@ -1,7 +1,7 @@
 import SockJS from "sockjs-client";
 import { CompatClient, IMessage, Stomp } from "@stomp/stompjs";
 import ReactModal from "react-modal";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../store/store";
@@ -26,7 +26,7 @@ import ChattingContainer from "../components/ChattingContainer";
 import EditWorkspaceInfo from "../components/Modals/EditWorkspaceInfoModal";
 import CreateInvitationLink from "../components/Modals/CreateInvitationLinkModal";
 import { fetchWorkspaceInfo } from "../features/workspaceSlice";
-import { fetchUserInfo, setRole } from "../features/userSlice";
+import { fetchUserInfo } from "../features/userSlice";
 import { getMessages } from "../api/chat/ChatAPI";
 import { Message } from "../types/channel";
 
@@ -46,11 +46,13 @@ const customStyles = {
 };
 
 function Chat() {
+  const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   const { state } = useLocation();
   const { workspaceId } = state;
   const user = useSelector((state: RootState) => state.user); // 유저 상태 조회
   const currentWorkspace = useSelector((state: RootState) => state.workspace);
+  const [isOwner, setIsOwner] = useState<boolean>(false);
 
   const chatEndRef = useRef<HTMLDivElement>(null); // chatEndRef ref 변수 정의
   const [input, setInput] = useState<string>(""); //input 상태 변수와 setInput 함수 정의
@@ -65,60 +67,43 @@ function Chat() {
   const [stompClient, setStompClient] = useState<CompatClient | null>(null);
 
   useEffect(() => {
-    dispatch(fetchUserInfo());
+    // Root에 user 상태값이 없는 경우(예_ 새로고침) 유저정보 GET해서 Root 상태에 저장하기
+    if (!user.id) dispatch(fetchUserInfo());
 
-    if (currentWorkspace.id) {
-      getWorkspaceMembers(currentWorkspace.id).then((res) => {
-        if (res) {
-          setMembers(() => res);
-          const filteredUser = res.filter((member) => member.id === user.id)[0];
-          filteredUser && dispatch(setRole(filteredUser.role));
-        }
-      });
-    }
-    localStorage.removeItem("CurrentWorkspaceId");
-  }, [user.id]);
-
-  useEffect(() => {
-    let requestWorkspaceId;
-
-    if (currentWorkspace.id) {
-      requestWorkspaceId = currentWorkspace.id;
-    } else {
-      const isExistLocalstorageValue =
-        localStorage.getItem("CurrentWorkspaceId");
-
-      if (isExistLocalstorageValue) {
-        requestWorkspaceId = parseInt(isExistLocalstorageValue);
+    // Root에 workspace 상태값이 없는 경우(예_새로고침) uselocation으로 전달해준 workspaceId를 통해 get하여 root상태에 저장하기.
+    if (!currentWorkspace.id) {
+      if (!workspaceId) {
+        navigate(`/workspace/`);
       } else {
-        requestWorkspaceId = workspaceId;
+        dispatch(fetchWorkspaceInfo(parseInt(workspaceId)));
       }
     }
+  }, []);
 
-    dispatch(fetchWorkspaceInfo(requestWorkspaceId));
-    localStorage.setItem(
-      "CurrentWorkspaceId",
-      JSON.stringify(requestWorkspaceId)
-    );
+  useEffect(() => {
+    if (!currentWorkspace.id || !user.id) return;
 
-    getWorkspaceMembers(requestWorkspaceId).then((res) => {
-      if (res) {
-        setMembers(() => res);
-        const filteredUser = res.filter((member) => member.id === user.id)[0];
-        filteredUser && dispatch(setRole(filteredUser.role));
-        console.log(user);
+    // current workspace id로
+    // 1. workspace에 속한 멤버들 리스트 GET -> 멤버관리 모달에서 사용, 본인이 해당 워크스페이스에서 오너인지 멤버인지 확인하여 isOwner값 변경
+    getWorkspaceMembers(currentWorkspace.id).then((members: User[]) => {
+      if (members) {
+        setMembers(() => members);
+        setIsOwner(
+          () =>
+            members.find((member) => member.id === user.id)?.role ===
+            "ROLE_WORKSPACE_OWNER"
+        );
       }
     });
 
-    getWorkspaceChannels(parseInt(requestWorkspaceId)).then(
-      (channels: Channel[]) => {
-        if (channels) {
-          setChannels(() => channels);
-          setCurrentChannel(() => channels[0]);
-        }
+    // 2. workspace의 채널들 리스트 GET -> 채널 데이터 바인딩
+    getWorkspaceChannels(currentWorkspace.id).then((channels: Channel[]) => {
+      if (channels) {
+        setChannels(() => channels);
+        setCurrentChannel(() => channels[0]);
       }
-    );
-  }, [currentWorkspace.id]);
+    });
+  }, [currentWorkspace.id, user.id]);
 
   useEffect(() => {
     if (!currentChannel) return;
@@ -349,6 +334,7 @@ function Chat() {
 
       {/* Channel Name 우측 화살표를 클릭하면 나오는 Menu Options */}
       <MenuModal
+        isOwner={isOwner}
         isOpen={isMenuOpen}
         onClose={toggleMenu}
         onMenuItemClick={handleMenuItemClick}
@@ -379,6 +365,7 @@ function Chat() {
             ),
             "멤버 관리하기": (
               <ManageMembers
+                isOwner={isOwner}
                 title={selectedModal}
                 closeModal={closeModal}
                 workspaceId={currentWorkspace.id}
@@ -404,6 +391,7 @@ function Chat() {
             ),
             "워크스페이스 삭제": (
               <DeleteWorkspace
+                isOwner={isOwner}
                 title={selectedModal}
                 closeModal={closeModal}
                 workspaceId={currentWorkspace.id}

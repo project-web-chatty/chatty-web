@@ -135,13 +135,9 @@ const workSpaceService = {
   },
 
   getWorkspaceMembers: async (workspaceId: number) => {
-    const response = await Get(`/workspace/${workspaceId}/members`);
+    const response = await Get<User[]>(`/workspace/${workspaceId}/members`);
 
-    if (response.data.isSuccess) {
-      return response.data.result as User[];
-    } else {
-      console.log(response.data.message);
-    }
+    return response.data.result;
   },
 
   /**
