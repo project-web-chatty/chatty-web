@@ -113,11 +113,12 @@ function Chat() {
     const sockJS = new SockJS("http://localhost:8080/stomp/chat");
     const client = Stomp.over(sockJS);
 
+    client.debug = () => {};
     client.heartbeat.outgoing = 0;
     client.heartbeat.incoming = 0;
 
     const onConnect = (frame: any) => {
-      console.log("Connected: ", frame);
+      console.log("Connected! ");
       subscribeToRoom(client, currentChannel.id);
       setStompClient(client);
     };
@@ -146,7 +147,7 @@ function Chat() {
   const subscribeToRoom = (client: CompatClient, roomId: number) => {
     setMessages(() => []);
     getMessages(roomId).then((res: Message[]) => {
-      setMessages(res);
+      setMessages(() => res.reverse());
     });
 
     client.subscribe(`/topic/channel.${roomId}`, (message: any) => {
@@ -207,15 +208,17 @@ function Chat() {
   };
 
   //키다운 핸들러(Enter 키 입력 시 메세지 전송)
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey && !isComposing && !!input.length) {
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && !e.shiftKey && !isComposing) {
+      if (input.trim()) {
+        sendMessage(input);
+      }
       e.preventDefault();
-      sendMessage(input);
     }
   };
 
   //입력값 변경 핸들러
-  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInput(e.target.value);
   };
 
@@ -226,7 +229,7 @@ function Chat() {
 
   //입력 구성 끝 핸들러
   const handleCompositionEnd = (
-    e: React.CompositionEvent<HTMLTextAreaElement>
+    e: React.CompositionEvent<HTMLInputElement>
   ) => {
     setIsComposing(false);
     setInput(e.currentTarget.value);
@@ -291,20 +294,16 @@ function Chat() {
           className="px-2 overflow-y-auto"
           style={{ height: "calc(100vh - 172px)" }}
         >
-          {messages.map(
-            ({ id, senderUsername, senderNickname, content, regDate }) => (
-              <>
-                <ChattingContainer // TODO : 추후 response타입 변경에 따라 수정 필요.
-                  key={id}
-                  nickname={senderNickname}
-                  profile=""
-                  chatting={content}
-                  time={regDate}
-                  isMe={user.nickname === senderNickname}
-                />
-              </>
-            )
-          )}
+          {messages.map((message: Message, index) => (
+            <ChattingContainer
+              key={message.id}
+              nickname={message.senderNickname}
+              profile=""
+              chatting={message.content}
+              time={message.regDate}
+              isMe={user.nickname === message.senderNickname}
+            />
+          ))}
           <div ref={chatEndRef}></div>
         </div>
         <div className="w-full h-12 bg-white flex items-center justify-between mt-6 rounded-lg px-3">
@@ -315,7 +314,7 @@ function Chat() {
             3. onCompositionStart : 사용자가 텍스트 입력을 시작할 때 발생. 주로 입력기가 활성화될 대 발생하며, 다국어 입력 시 조합 문자를 입력하기 시작할 때 트리거 됨.
             4. onCompositionEnd : 사용자가 텍스트 입력을 완료했을 때 발생. 조합 문자가 완성되거나 입력이 종료될 때 트리거 됨.
           */}
-          <textarea
+          <input
             className="w-full h-12 mx-3 focus:outline-none resize-none flex-1"
             style={{ resize: "none" }}
             placeholder="메세지를 입력해주세요."
