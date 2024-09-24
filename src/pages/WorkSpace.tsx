@@ -1,13 +1,12 @@
 import ReactModal from "react-modal";
-import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState } from "react";
+import { AppDispatch, RootState } from "../store/store";
+import { useDispatch, useSelector } from "react-redux";
 
 import GroupMenu from "../components/GroupIcon";
 import WorkspaceForm from "../components/WorkspaceFormModal";
-import { getUserInfo } from "../api/user/UserAPI";
-import { joinWorkspace } from "../api/workspace/WorkSpaceAPI";
-import { AppDispatch, RootState } from "../store/store";
 import { fetchUserInfo } from "../features/userSlice";
+import { joinWorkspace } from "../api/workspace/WorkSpaceAPI";
 
 interface WorkSpaceProps {
   name?: string;
@@ -15,8 +14,8 @@ interface WorkSpaceProps {
 
 const WorkSpace: React.FC<WorkSpaceProps> = ({ name: string }) => {
   const dispatch = useDispatch<AppDispatch>();
-  const [isOpen, setIsOpen] = useState(false);
   const user = useSelector((state: RootState) => state.user); // 유저 상태 조회
+  const [isOpen, setIsOpen] = useState(false);
   const [code, setCode]: [string, any] = useState("");
 
   useEffect(() => {
@@ -26,9 +25,11 @@ const WorkSpace: React.FC<WorkSpaceProps> = ({ name: string }) => {
   const openModal = () => {
     setIsOpen(true);
   };
+
   const closeModal = () => {
     setIsOpen(false);
   };
+
   const customStyles = {
     overlay: {
       backgroundColor: "rgba(0,0,0,0.5)",

@@ -1,5 +1,5 @@
 import SockJS from "sockjs-client";
-import { CompatClient, IMessage, Stomp } from "@stomp/stompjs";
+import { CompatClient, Stomp } from "@stomp/stompjs";
 import ReactModal from "react-modal";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";

@@ -1,16 +1,17 @@
+import ReactModal from "react-modal";
+import { useNavigate } from "react-router";
 import { useState, useEffect } from "react";
 import { AppDispatch, RootState } from "../store/store";
-import ReactModal from "react-modal";
 import { useDispatch, useSelector } from "react-redux";
+
+import IconUser from "../assets/icon/icon_user_black.svg";
+import IconPencil from "../assets/icon/icon_pencil.png";
 import ButtonModal from "../components/ButtonModal";
-import { useNavigate } from "react-router";
-import { postLogout, updatePassword } from "../api/auth/AuthAPI";
-import { deleteAccount, updateUserInfo } from "../api/user/UserAPI";
 import { fetchUserInfo } from "../features/userSlice";
 import PasswordEditingModal from "../components/PasswordEditingModal";
 import UploadUserProfileModal from "../components/Modals/UploadUserProfileModal";
-import IconUser from "../assets/icon/icon_user_black.svg";
-import IconPencil from "../assets/icon/icon_pencil.png";
+import { postLogout, updatePassword } from "../api/auth/AuthAPI";
+import { deleteAccount, updateUserInfo } from "../api/user/UserAPI";
 
 function UserSetting() {
   const dispatch = useDispatch<AppDispatch>();
