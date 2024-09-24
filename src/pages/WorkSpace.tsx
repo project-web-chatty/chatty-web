@@ -20,11 +20,7 @@ const WorkSpace: React.FC<WorkSpaceProps> = ({ name: string }) => {
   const [code, setCode]: [string, any] = useState("");
 
   useEffect(() => {
-    getUserInfo().then((res) => {
-      if (res) {
-        dispatch(fetchUserInfo());
-      }
-    });
+    dispatch(fetchUserInfo());
   }, []);
 
   const openModal = () => {

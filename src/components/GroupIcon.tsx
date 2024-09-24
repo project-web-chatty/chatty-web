@@ -41,12 +41,11 @@ const GroupMenu: React.FC<GroupMenuProps> = ({ openModal }) => {
   const workspaces = useSelector((state: RootState) => state.user.myWorkspaces);
 
   const openWorkSpace = useCallback(
-    (workspaceId?: number) => {
+    async (workspaceId?: number) => {
       if (!!workspaceId) {
-        getWorkspaceInfo(workspaceId).then((workspace: ResponseWorkspace) => {
-          dispatch(fetchWorkspaceInfo(workspace.id));
-          navigate(`/home`, { state: { workspaceId: workspaceId } });
-        });
+        await dispatch(fetchWorkspaceInfo(workspaceId));
+
+        navigate(`/home`, { state: { workspaceId: workspaceId } });
       }
     },
     [navigate]
