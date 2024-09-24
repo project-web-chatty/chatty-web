@@ -291,8 +291,9 @@ function Chat() {
           className="px-2 overflow-y-auto"
           style={{ height: "calc(100vh - 172px)" }}
         >
-          {messages.map(
-            ({ id, senderUsername, senderNickname, content, regDate }) => (
+          {messages
+            .reverse()
+            .map(({ id, senderUsername, senderNickname, content, regDate }) => (
               <>
                 <ChattingContainer // TODO : 추후 response타입 변경에 따라 수정 필요.
                   key={id}
@@ -303,8 +304,7 @@ function Chat() {
                   isMe={user.nickname === senderNickname}
                 />
               </>
-            )
-          )}
+            ))}
           <div ref={chatEndRef}></div>
         </div>
         <div className="w-full h-12 bg-white flex items-center justify-between mt-6 rounded-lg px-3">
