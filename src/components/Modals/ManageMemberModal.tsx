@@ -8,6 +8,7 @@ import { RootState } from "../../store/store";
 import { deleteMember } from "../../api/workspace/WorkSpaceAPI";
 
 interface ManageMembersProps {
+  isOwner: boolean;
   closeModal: () => void;
   title: string | null;
   workspaceId: number;
@@ -16,6 +17,7 @@ interface ManageMembersProps {
 }
 
 const ManageMembers: React.FC<ManageMembersProps> = ({
+  isOwner,
   closeModal,
   title,
   workspaceId,
@@ -182,7 +184,7 @@ const ManageMembers: React.FC<ManageMembersProps> = ({
                     {member.role === "ROLE_WORKSPACE_OWNER" ? "오너" : "멤버"}
                   </div>
                   <div className="w-full flex items-center justify-center">
-                    {user.workspaceRole === "ROLE_WORKSPACE_OWNER" && (
+                    {isOwner && (
                       <img
                         className="w-3 cursor-pointer"
                         src={IconMenu}

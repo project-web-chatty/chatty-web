@@ -5,12 +5,14 @@ import IconClose from "../../assets/icon/icon_close.png";
 import { RootState } from "../../store/store";
 
 interface DeleteWorkspaceProps {
+  isOwner: boolean;
   closeModal: () => void;
   title: string | null;
   workspaceId: number;
 }
 
 const DeleteWorkspace: React.FC<DeleteWorkspaceProps> = ({
+  isOwner,
   closeModal,
   title,
   workspaceId,
@@ -19,7 +21,7 @@ const DeleteWorkspace: React.FC<DeleteWorkspaceProps> = ({
   const user = useSelector((state: RootState) => state.user);
   const onClickButton = () => {
     // Delete 전 한번 더 권한 확인하기
-    if (user.workspaceRole === "ROLE_WORKSPACE_OWNER") {
+    if (isOwner) {
       deleteWorkspace(workspaceId).then((res) => {
         if (res) {
           closeModal();
