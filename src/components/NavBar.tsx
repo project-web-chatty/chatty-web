@@ -1,6 +1,5 @@
 import { useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { getWorkspaceInfo } from "../api/workspace/WorkSpaceAPI";
 import { fetchWorkspaceInfo } from "../features/workspaceSlice";
 import { AppDispatch, RootState } from "../store/store";
 import IconHome from "../assets/icon/icon_home.png";
@@ -23,7 +22,6 @@ const NavBarComponent: React.FC<NavBarProps> = ({
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   const user = useSelector((state: RootState) => state.user); // 유저 상태 조회
-
   const currentWorkspace = useSelector((state: RootState) => state.workspace);
 
   const workspaceListRef = useRef<HTMLDivElement>(null);

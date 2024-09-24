@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import IconUpload from "../assets/icon/icon_upload.png";
-import Modal from "../components/Modal"; //기본 Modal 컴포넌트
-import NavBarComponent from "../components/NavBar";
-import UserSetting from "./UserSetting";
 import Chat from "./Chat";
+import Modal from "../components/Modal"; //기본 Modal 컴포넌트
+import UserSetting from "./UserSetting";
+import NavBarComponent from "../components/NavBar";
+import IconUpload from "../assets/icon/icon_upload.png";
 
 function Home() {
   const [isWorkspaceModalOpen, setIsWorkspaceModalOpen] = useState(false);

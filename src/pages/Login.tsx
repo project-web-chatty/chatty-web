@@ -1,14 +1,14 @@
 import React, { useState, ChangeEvent } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState, AppDispatch } from "../store/store";
+
+import { loginApi } from "../api/auth/AuthAPI";
+import { RequestLoginParams } from "../types/auth";
 import logo_google from "../assets/logo/logo_google.png";
 import logo_github from "../assets/logo/logo_github.png";
-import { RootState, AppDispatch } from "../store/store";
-import { RequestLoginParams } from "../types/auth";
-import { loginApi } from "../api/auth/AuthAPI";
 
 const Login: React.FC = () => {
-  const dispatch = useDispatch<AppDispatch>(); // AppDispatch 타입 지정
   const navigate = useNavigate();
   const { loading, error } = useSelector((state: RootState) => state.auth);
   const [wrongAccess, setWrongAccess] = useState<boolean>(false);
