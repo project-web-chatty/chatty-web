@@ -2,7 +2,7 @@ import { Put } from "./../util/apiUtils";
 import { Delete, Get, Post } from "../util/apiUtils";
 import { ResponseWorkspace } from "../../types/workspace";
 import { User } from "../../types/user";
-import { channel } from "./../../types/channel.d";
+import { Channel } from "../../types/workspace";
 
 const workSpaceService = {
   /**
@@ -22,7 +22,7 @@ const workSpaceService = {
    * @returns
    */
   getWorkspaceChannels: async (workspaceId: number) => {
-    const response = await Get<channel[]>(`/workspace/${workspaceId}/channels`);
+    const response = await Get<Channel[]>(`/workspace/${workspaceId}/channels`);
 
     return response.data.result;
   },

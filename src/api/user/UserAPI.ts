@@ -1,8 +1,6 @@
 import { Put } from "./../util/apiUtils";
 import { Delete, Get, Post } from "../util/apiUtils";
-import { ResponseWorkspace } from "../../types/workspace";
 import { User } from "../../types/user";
-import { channel } from "./../../types/channel.d";
 
 const workSpaceService = {
   /**
