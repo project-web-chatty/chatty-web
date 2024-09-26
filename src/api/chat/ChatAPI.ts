@@ -1,4 +1,4 @@
-import { Message } from "../../types/channel";
+import { Message } from "../../types/chat";
 import { Get } from "../util/apiUtils";
 
 const chatService = {
@@ -21,7 +21,7 @@ const chatService = {
   },
 
   getUnreadMessageCount: async (channelId: number) => {
-    const response = await Get(`chat/${channelId}/count`);
+    const response = await Get<number>(`chat/${channelId}/count`);
 
     return response.data.result;
   },

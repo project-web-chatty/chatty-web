@@ -27,8 +27,8 @@ import EditWorkspaceInfo from "../components/Modals/EditWorkspaceInfoModal";
 import CreateInvitationLink from "../components/Modals/CreateInvitationLinkModal";
 import { fetchWorkspaceInfo } from "../features/workspaceSlice";
 import { fetchUserInfo } from "../features/userSlice";
-import { getMessages } from "../api/chat/ChatAPI";
-import { Message } from "../types/channel";
+import { getMessages, getUnreadMessageCount } from "../api/chat/ChatAPI";
+import { Message } from "../types/chat";
 
 const customStyles = {
   overlay: {
@@ -99,6 +99,15 @@ function Chat() {
     // 2. workspace의 채널들 리스트 GET -> 채널 데이터 바인딩
     getWorkspaceChannels(currentWorkspace.id).then((channels: Channel[]) => {
       if (channels) {
+        channels.forEach(
+          async (channel) =>
+            await getUnreadMessageCount(channel.id).then((count) => {
+              if (count) {
+                channel.unReadCount = count;
+              }
+            })
+        );
+
         setChannels(() => channels);
         setCurrentChannel(() => channels[0]);
       }
@@ -205,6 +214,18 @@ function Chat() {
 
   const handleChannelChange = (selectedChannel: Channel) => {
     setCurrentChannel(() => selectedChannel);
+
+    // 선택한 채널의 '안읽은 메세지 개수' 초기화
+    const modified = channels?.map((channel) => {
+      if (channel.id === selectedChannel.id) {
+        channel.unReadCount = 0;
+      }
+      return channel;
+    });
+
+    if (modified) {
+      setChannels(() => modified);
+    }
   };
 
   //키다운 핸들러(Enter 키 입력 시 메세지 전송)
@@ -267,7 +288,13 @@ function Chat() {
                 onClick={() => handleChannelChange(channel)}
               >
                 <p className="text-sm font-bold text-white"># {channel.name}</p>
-                {/* <p className="text-xs text-gray">5 new messaages</p> */}
+                {channel.unReadCount ? (
+                  <p className="text-xs text-gray">
+                    {channel.unReadCount} new messages
+                  </p>
+                ) : (
+                  <></>
+                )}
               </div>
             ))}
           </div>
