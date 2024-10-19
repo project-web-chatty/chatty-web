@@ -54,6 +54,7 @@ function Chat() {
   const currentWorkspace = useSelector((state: RootState) => state.workspace);
   const [isOwner, setIsOwner] = useState<boolean>(false);
 
+  const chatStartRef = useRef<HTMLDivElement>(null); // chatEndRef ref 변수 정의
   const chatEndRef = useRef<HTMLDivElement>(null); // chatEndRef ref 변수 정의
   const [input, setInput] = useState<string>(""); //input 상태 변수와 setInput 함수 정의
   const [members, setMembers] = useState<User[]>([]);
@@ -63,8 +64,26 @@ function Chat() {
   const [isComposing, setIsComposing] = useState<boolean>(false); //조합상태감지를 위한 상태변수. 조합문자란, 아직 완성되지 않은 문자로, 여러 키 입력이 조합되어 최종문자가 만들어지는 과정을 말함(한글, 중국어, 일본어 등). isComposing이 적용되지 않으면, 채팅을 엔터로 입력 시, 마지막 글자가 중복되서 한번 더 채팅으로 보내짐.
   const [selectedModal, setSelectedModal] = useState<string | null>(null);
   const [currentChannel, setCurrentChannel] = useState<Channel | null>(null);
-
   const [stompClient, setStompClient] = useState<CompatClient | null>(null);
+  const [page, setPage] = useState<number>(0);
+  const [isFetching, setFetching] = useState<boolean>(false);
+  const [isLast, setIsLast] = useState<boolean>(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver((e) => {
+      if (e[0].isIntersecting) {
+        if (!isFetching && !!page && !isLast) {
+          loadMessages();
+        }
+      }
+    });
+
+    if (chatStartRef.current) observer.observe(chatStartRef.current);
+
+    return () => {
+      if (chatStartRef.current) observer.unobserve(chatStartRef.current);
+    };
+  }, [isFetching]);
 
   useEffect(() => {
     // Root에 user 상태값이 없는 경우(예_ 새로고침) 유저정보 GET해서 Root 상태에 저장하기
@@ -119,7 +138,7 @@ function Chat() {
 
     const token = sessionStorage.getItem("accessToken");
 
-    const sockJS = new SockJS("http://localhost:8080/stomp/chat");
+    const sockJS = new SockJS(`${process.env.REACT_APP_SOCKET_URL}`);
     const client = Stomp.over(sockJS);
 
     client.debug = () => {};
@@ -153,11 +172,30 @@ function Chat() {
     };
   }, [currentChannel?.id]);
 
-  const subscribeToRoom = (client: CompatClient, roomId: number) => {
-    setMessages(() => []);
-    getMessages(roomId).then((res: Message[]) => {
-      setMessages(() => res.reverse());
-    });
+  const loadMessages = async () => {
+    if (currentChannel) {
+      setFetching(true);
+      const newChat = await getMessages(currentChannel.id, page);
+
+      if (!!newChat.messageResponseDtoList) {
+        await setMessages((prev) => [
+          ...prev,
+          ...newChat.messageResponseDtoList,
+        ]);
+
+        if (!newChat.last) {
+          setPage((prev) => prev + 1);
+        } else {
+          setIsLast(true);
+        }
+      }
+      setFetching(false);
+    }
+  };
+
+  const subscribeToRoom = async (client: CompatClient, roomId: number) => {
+    setMessages([]);
+    await loadMessages();
 
     client.subscribe(`/topic/channel.${roomId}`, (message: any) => {
       if (message.body) {
@@ -168,11 +206,19 @@ function Chat() {
       }
     });
   };
-
   //messages 상태가 변경될 때마다 chatEndRef를 이용해 스크롤을 끝으로 이동
+
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messages.length && !page) {
+      focusToBottom(chatEndRef);
+    }
   }, [messages]);
+
+  const focusToBottom = (focus: React.RefObject<HTMLDivElement>) => {
+    window.requestAnimationFrame(() =>
+      focus.current?.scrollIntoView({ behavior: "smooth", block: "end" })
+    );
+  };
 
   const handleDeleteMember = (memberId: number) => {
     setMembers((members) => members.filter((member) => member.id !== memberId));
@@ -213,6 +259,9 @@ function Chat() {
   };
 
   const handleChannelChange = (selectedChannel: Channel) => {
+    setPage(0);
+    setIsLast(false);
+    setFetching(false);
     setCurrentChannel(() => selectedChannel);
 
     // 선택한 채널의 '안읽은 메세지 개수' 초기화
@@ -308,7 +357,7 @@ function Chat() {
       {/* Chat container */}
       <div
         className="bg-chatting min-h-screen flex flex-col p-6"
-        style={{ width: "calc(100vw - 24rem)" }}
+        style={{ width: "calc(100vw - 24rem)", height: "100vh" }}
       >
         <div className="flex justify-between items-center pb-6">
           <p className="text-xl font-bold text-white">
@@ -318,9 +367,10 @@ function Chat() {
         </div>
         <div
           id="chatContanier"
-          className="px-2 overflow-y-auto"
+          className="px-2 overflow-y-scroll flex flex-col-reverse"
           style={{ height: "calc(100vh - 172px)" }}
         >
+          <div ref={chatEndRef} className="w-full min-h-1"></div>
           {messages.map((message: Message, index) => (
             <ChattingContainer
               key={message.id}
@@ -331,7 +381,7 @@ function Chat() {
               isMe={user.nickname === message.senderNickname}
             />
           ))}
-          <div ref={chatEndRef}></div>
+          <div ref={chatStartRef} className="w-full min-h-1"></div>
         </div>
         <div className="w-full h-12 bg-white flex items-center justify-between mt-6 rounded-lg px-3">
           <img id="clip" className="w-5 h-5" src={IconClip} alt="" />
