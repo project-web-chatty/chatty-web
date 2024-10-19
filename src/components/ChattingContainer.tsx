@@ -37,7 +37,7 @@ function ChattingContainer({ nickname, profile, chatting, time, isMe }: any) {
       {isMe ? (
         <div id="me" className="flex justify-end my-5">
           <div id="time" className="flex flex-col justify-end mr-3">
-            <p className="text-xs text-black">{time}</p>
+            <p className="text-xs text-black">{convertTimeFormat()}</p>
           </div>
           <div className="mr-3">
             <div id="nickname" className="flex justify-end">
