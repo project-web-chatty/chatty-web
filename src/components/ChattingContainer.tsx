@@ -2,7 +2,15 @@ import React, { useState, useRef, useEffect } from "react";
 import IconUser from "../assets/icon/icon_user_black.svg";
 
 //ChattingContainer 컴포넌트 정의
-function ChattingContainer({ nickname, profile, chatting, time, isMe }: any) {
+function ChattingContainer({
+  id,
+  nickname,
+  profile,
+  chatting,
+  time,
+  isMe,
+  isLastRead,
+}: any) {
   //chatNick 상태 변수와 setChatNick 함수 정의
   const [chatNick, setChatNick] = useState("");
 
@@ -35,7 +43,7 @@ function ChattingContainer({ nickname, profile, chatting, time, isMe }: any) {
   return (
     <>
       {isMe ? (
-        <div id="me" className="flex justify-end my-5">
+        <div id={id} className="flex justify-end my-5">
           <div id="time" className="flex flex-col justify-end mr-3">
             <p className="text-xs text-black">{convertTimeFormat()}</p>
           </div>
@@ -57,7 +65,7 @@ function ChattingContainer({ nickname, profile, chatting, time, isMe }: any) {
           />
         </div>
       ) : (
-        <div id="you" className="flex my-5">
+        <div id={id} className="flex my-5">
           <img
             id="profile"
             src={IconUser}
@@ -77,6 +85,16 @@ function ChattingContainer({ nickname, profile, chatting, time, isMe }: any) {
           <div id="time" className="flex flex-col justify-end ml-3">
             <p className="text-slate-900 text-xs">{convertTimeFormat()}</p>
           </div>
+        </div>
+      )}
+
+      {isLastRead && !isMe && (
+        <div className="flex items-center justify-center pt-3 pb-3">
+          <span className="grow h-[1px] bg-slate-400 m-2"></span>
+          <span className="bg-slate-700 text-white px-4 py-1 text-xs rounded">
+            여기까지 읽었습니다.
+          </span>
+          <span className="grow h-[1px] bg-slate-400 m-2"></span>
         </div>
       )}
     </>

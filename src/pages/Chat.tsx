@@ -2,7 +2,7 @@ import SockJS from "sockjs-client";
 import { CompatClient, Stomp } from "@stomp/stompjs";
 import ReactModal from "react-modal";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../store/store";
 
@@ -27,7 +27,11 @@ import EditWorkspaceInfo from "../components/Modals/EditWorkspaceInfoModal";
 import CreateInvitationLink from "../components/Modals/CreateInvitationLinkModal";
 import { fetchWorkspaceInfo } from "../features/workspaceSlice";
 import { fetchUserInfo } from "../features/userSlice";
-import { getMessages, getUnreadMessageCount } from "../api/chat/ChatAPI";
+import {
+  getMessages,
+  getUnreadMessageCount,
+  searchLastReadMessageId,
+} from "../api/chat/ChatAPI";
 import { Message } from "../types/chat";
 
 const customStyles = {
@@ -54,20 +58,27 @@ function Chat() {
   const currentWorkspace = useSelector((state: RootState) => state.workspace);
   const [isOwner, setIsOwner] = useState<boolean>(false);
 
-  const chatStartRef = useRef<HTMLDivElement>(null); // chatEndRef ref 변수 정의
-  const chatEndRef = useRef<HTMLDivElement>(null); // chatEndRef ref 변수 정의
   const [input, setInput] = useState<string>(""); //input 상태 변수와 setInput 함수 정의
   const [members, setMembers] = useState<User[]>([]);
-  const [messages, setMessages] = useState<Message[]>([]);
   const [channels, setChannels] = useState<Channel[] | null>(null);
   const [isMenuOpen, setMenuOpen] = useState(false);
   const [isComposing, setIsComposing] = useState<boolean>(false); //조합상태감지를 위한 상태변수. 조합문자란, 아직 완성되지 않은 문자로, 여러 키 입력이 조합되어 최종문자가 만들어지는 과정을 말함(한글, 중국어, 일본어 등). isComposing이 적용되지 않으면, 채팅을 엔터로 입력 시, 마지막 글자가 중복되서 한번 더 채팅으로 보내짐.
   const [selectedModal, setSelectedModal] = useState<string | null>(null);
   const [currentChannel, setCurrentChannel] = useState<Channel | null>(null);
   const [stompClient, setStompClient] = useState<CompatClient | null>(null);
+
+  // 채팅내역 관련 변수
+  const chatStartRef = useRef<HTMLDivElement>(null); // chatEndRef ref 변수 정의
+  const chatEndRef = useRef<HTMLDivElement>(null); // chatEndRef ref 변수 정의
+  const chatListRef = useRef<HTMLDivElement[]>([]);
+
+  const [messages, setMessages] = useState<Message[]>([]);
   const [page, setPage] = useState<number>(0);
-  const [isFetching, setFetching] = useState<boolean>(false);
-  const [isLast, setIsLast] = useState<boolean>(false);
+  const [isFetching, setFetching] = useState<boolean>(false); // 데이터 페칭중인지 판별 (목적 : 페칭 중이라면 다음 페이지의 페칭을 기다리기위함)
+  const [isLast, setIsLast] = useState<boolean>(false); // 마지막 페이지인지 판별 (목적 : 무한스크롤 끝내는 시점 파악위함)
+  const [isHavePoint, setIsHavePoint] = useState<boolean>(); // 현재 페이지에 마지막으로 읽은 메세지 있는지 확인 (목적 : 여러 페이지동안 메세지를 안읽었을때 안읽은 메세지가 있는 페이지까지 불러와서 해당 메세지 포커스하기 위함)
+  const [lastReadId, setLastReadId] = useState<string | null>(null); // 가장 마지막으로 읽은 메세지 id
+  const [isSentByMe, setIsSentByMe] = useState<boolean>(false);
 
   useEffect(() => {
     const observer = new IntersectionObserver((e) => {
@@ -148,6 +159,7 @@ function Chat() {
     const onConnect = (frame: any) => {
       console.log("Connected! ");
       subscribeToRoom(client, currentChannel.id);
+      handleChannelChange(currentChannel);
       setStompClient(client);
     };
 
@@ -188,31 +200,64 @@ function Chat() {
         } else {
           setIsLast(true);
         }
+        setIsHavePoint(newChat.havePoint);
       }
       setFetching(false);
     }
   };
 
+  // isHavePOINT 가 있으면, 해당 페이지에서 안읽은 메세지 id에 해당하는 아이템을 찾아서 scroll into view 해주고
+  // 없으면, 다음 페이지 로드
+  useEffect(() => {
+    if (currentChannel) {
+      if (!isHavePoint) {
+        loadMessages();
+      } else {
+        searchLastReadMessageId(currentChannel.id).then((id: string) => {
+          if (id && id !== chatListRef.current[0].id) {
+            setLastReadId(id);
+            focusLastReadMessage(id);
+          } else {
+            setLastReadId(null); // 가장 마지막 메세지에 읽은 메세지라고 표시할 필요 없기 때문.
+          }
+        });
+      }
+    }
+  }, [isHavePoint, chatListRef.current]);
+
+  const focusLastReadMessage = (lastReadMessageId: string) => {
+    if (chatListRef.current[0]) {
+      const targetRef = chatListRef.current.find(
+        (item) => item.id === lastReadMessageId
+      );
+
+      if (targetRef) {
+        targetRef.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+  };
+
   const subscribeToRoom = async (client: CompatClient, roomId: number) => {
     setMessages([]);
+
     await loadMessages();
 
-    client.subscribe(`/topic/channel.${roomId}`, (message: any) => {
-      if (message.body) {
-        setMessages((prevMessages: Message[]) => [
-          ...prevMessages,
-          JSON.parse(message.body),
-        ]);
+    client.subscribe(`/topic/channel.${roomId}`, (response) => {
+      const message: Message = JSON.parse(response.body);
+
+      if (message) {
+        setMessages((prevMessages: Message[]) => [message, ...prevMessages]);
+        setIsSentByMe(message.senderNickname === user.nickname);
       }
     });
   };
-  //messages 상태가 변경될 때마다 chatEndRef를 이용해 스크롤을 끝으로 이동
 
+  //messages 상태가 변경될 때마다 chatEndRef를 이용해 스크롤을 끝으로 이동
   useEffect(() => {
-    if (messages.length && !page) {
+    if (messages.length && isSentByMe) {
       focusToBottom(chatEndRef);
     }
-  }, [messages]);
+  }, [messages, isSentByMe]);
 
   const focusToBottom = (focus: React.RefObject<HTMLDivElement>) => {
     window.requestAnimationFrame(() =>
@@ -259,21 +304,26 @@ function Chat() {
   };
 
   const handleChannelChange = (selectedChannel: Channel) => {
-    setPage(0);
-    setIsLast(false);
-    setFetching(false);
-    setCurrentChannel(() => selectedChannel);
-
-    // 선택한 채널의 '안읽은 메세지 개수' 초기화
-    const modified = channels?.map((channel) => {
-      if (channel.id === selectedChannel.id) {
-        channel.unReadCount = 0;
+    if (currentChannel) {
+      if (currentChannel.id !== selectedChannel.id) {
+        setPage(0);
+        setIsLast(false);
+        setFetching(false);
+        setLastReadId(null);
+        setCurrentChannel(() => selectedChannel);
       }
-      return channel;
-    });
 
-    if (modified) {
-      setChannels(() => modified);
+      // 선택한 채널의 '안읽은 메세지 개수' 초기화
+      const modifiedChannels = channels?.map((channel) => {
+        if (channel.id === selectedChannel.id) {
+          channel.unReadCount = 0;
+        }
+        return channel;
+      });
+
+      if (modifiedChannels) {
+        setChannels(modifiedChannels);
+      }
     }
   };
 
@@ -366,20 +416,25 @@ function Chat() {
           <img className="w-5 h-5" src={IconSearch} alt="" />
         </div>
         <div
-          id="chatContanier"
           className="px-2 overflow-y-scroll flex flex-col-reverse"
           style={{ height: "calc(100vh - 172px)" }}
         >
           <div ref={chatEndRef} className="w-full min-h-1"></div>
           {messages.map((message: Message, index) => (
-            <ChattingContainer
+            <div
+              id={message.id ?? ""}
               key={message.id}
-              nickname={message.senderNickname}
-              profile=""
-              chatting={message.content}
-              time={message.regDate}
-              isMe={user.nickname === message.senderNickname}
-            />
+              ref={(e: HTMLDivElement) => (chatListRef.current[index] = e)}
+            >
+              <ChattingContainer
+                isLastRead={message.id === lastReadId}
+                nickname={message.senderNickname}
+                profile=""
+                chatting={message.content}
+                time={message.regDate}
+                isMe={user.nickname === message.senderNickname}
+              />
+            </div>
           ))}
           <div ref={chatStartRef} className="w-full min-h-1"></div>
         </div>
