@@ -10,7 +10,7 @@ const chatService = {
   },
 
   searchLastReadMessageId: async (channelId: number) => {
-    const response = await Get(`chat/${channelId}/read/id`);
+    const response = await Get<string>(`chat/${channelId}/read/id`);
 
     return response.data.result;
   },
