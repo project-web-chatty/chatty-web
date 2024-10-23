@@ -129,15 +129,6 @@ function Chat() {
     // 2. workspace의 채널들 리스트 GET -> 채널 데이터 바인딩
     getWorkspaceChannels(currentWorkspace.id).then((channels: Channel[]) => {
       if (channels) {
-        channels.forEach(
-          async (channel) =>
-            await getUnreadMessageCount(channel.id).then((count) => {
-              if (count) {
-                channel.unReadCount = count;
-              }
-            })
-        );
-
         setChannels(() => channels);
 
         const channelId = getChannelIdByStorage(channels);
@@ -334,7 +325,7 @@ function Chat() {
       // 선택한 채널의 '안읽은 메세지 개수' 초기화
       const modifiedChannels = channels?.map((channel) => {
         if (channel.id === selectedChannel.id) {
-          channel.unReadCount = 0;
+          channel.unreadCount = 0;
         }
         return channel;
       });
@@ -405,9 +396,9 @@ function Chat() {
                 onClick={() => handleChannelChange(channel)}
               >
                 <p className="text-sm font-bold text-white"># {channel.name}</p>
-                {channel.unReadCount ? (
+                {channel.unreadCount ? (
                   <p className="text-xs text-gray">
-                    {channel.unReadCount} new messages
+                    {channel.unreadCount} new messages
                   </p>
                 ) : (
                   <></>
