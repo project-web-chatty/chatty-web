@@ -139,10 +139,23 @@ function Chat() {
         );
 
         setChannels(() => channels);
-        setCurrentChannel(() => channels[0]);
+
+        const channelId = getChannelIdByStorage(channels);
+
+        channelId
+          ? setCurrentChannel(channelId)
+          : setCurrentChannel(channels[0]);
       }
     });
   }, [currentWorkspace.id, user.id]);
+
+  const getChannelIdByStorage = (channels: Channel[]) => {
+    const channelId = sessionStorage.getItem("currentChannelId");
+
+    if (channelId) {
+      return channels.find((channel) => channel.id === parseInt(channelId));
+    }
+  };
 
   useEffect(() => {
     if (!currentChannel) return;
@@ -304,6 +317,11 @@ function Chat() {
   };
 
   const handleChannelChange = (selectedChannel: Channel) => {
+    sessionStorage.setItem(
+      "currentChannelId",
+      JSON.stringify(selectedChannel.id)
+    );
+
     if (currentChannel) {
       if (currentChannel.id !== selectedChannel.id) {
         setPage(0);
