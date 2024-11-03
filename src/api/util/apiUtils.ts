@@ -85,6 +85,7 @@ axiosInstance.interceptors.response.use(
         case 4057: // AUTH_FAIL_PASSWORD_MATCHING(BAD_REQUEST,4057,"비밀번호가 올바르지 않습니다.")
           sessionStorage.removeItem("accessToken");
           sessionStorage.removeItem("refreshToken");
+          sessionStorage.removeItem("currentChannelId");
           window.location.href = "/";
           break;
         default:

@@ -16,7 +16,7 @@ export interface Channel {
   lastModifiedDate: string;
   id: number;
   name: string;
-  unReadCount: number = 0; //0으로 초기화
+  unreadCount: number; //0으로 초기화
 }
 
 export interface RequestCreateWorkspaceParams {
