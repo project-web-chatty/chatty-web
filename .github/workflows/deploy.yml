@@ -1,0 +1,39 @@
+name: Deploy to EC2 Instance 
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build Docker image
+        run: docker build -t sh020119/project_frontend:latest .
+
+      - name: Push Docker image to Docker Hub
+        run: docker push sh020119/project_frontend:latest
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v0.1.5
+        with:
+          host: ${{ secrets.LIVE_SERVER_IP }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            docker stop frontend_container 
+            docker rm frontend_container
+            docker pull sh020119/project_frontend:latest
+            docker run -d --name frontend_container -p 3000:3000 sh020119/project_frontend:latest
