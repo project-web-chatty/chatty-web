@@ -109,10 +109,22 @@ const Login: React.FC = () => {
             <hr className="my-8 h-px w-full max-w-96 border-white" />
           </div>
           <div className="flex gap-20">
-            <button>
+            <button
+              onClick={() =>
+                window.open(
+                  "http://ec2-3-34-211-45.ap-northeast-2.compute.amazonaws.com:8080/oauth2/authorization/google"
+                )
+              }
+            >
               <img src={logo_google} className="h-10 w-10" />
             </button>
-            <button>
+            <button
+              onClick={() =>
+                window.open(
+                  "http://ec2-3-34-211-45.ap-northeast-2.compute.amazonaws.com:8080/oauth2/authorization/github"
+                )
+              }
+            >
               <img src={logo_github} className="h-10 w-10" />
             </button>
           </div>
