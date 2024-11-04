@@ -6,7 +6,7 @@ import Home from "./pages/Home";
 import WorkSpace from "./pages/WorkSpace";
 import NotFound from "./pages/NotFound";
 import UserSetting from "./pages/UserSetting";
-import SocialLoginRedirection from "./components/GoogleLogin";
+import SocialLoginRedirection from "./components/SocialLoginRedirection";
 
 function App() {
   return (

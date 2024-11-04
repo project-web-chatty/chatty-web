@@ -24,10 +24,5 @@ export default function SocialLoginRedirection() {
     }
   }, []);
 
-  return (
-    <>
-      {/* <span>{accessToken}</span>
-      <span>{refreshToken}</span> */}
-    </>
-  );
+  return <></>;
 }
