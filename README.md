@@ -1,6 +1,5 @@
 # chatty-web
-
-frontend repository for chatty web service team projects
+chatty 프로젝트의 프론트엔드 개발 관련 내용입니다.
 
 ## 개발 환경
 - React
